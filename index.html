@@ -18,7 +18,7 @@
     --accent: var(--accent-home);
     --accent-home: #f5a83c;
     --accent-workout: #a39d90;
-    --accent-food: #a39d90;
+    --accent-food: #e0793a;
     --accent-sleep: #7db3ec;
     --accent-friends: #f2d038;
     --accent-study: #23aec9;
@@ -154,6 +154,7 @@
 
   .nav-link.active[data-route="home"] { color: var(--accent-home); }
   .nav-link.active[data-route="fitness"] { color: var(--accent-workout); }
+  .nav-link.active[data-route="calories"] { color: var(--accent-food); }
   .nav-link.active[data-route="sleep"] { color: var(--accent-sleep); }
   .nav-link.active[data-route="study"] { color: var(--accent-study); }
   .nav-link.active[data-route="friends"] { color: var(--accent-friends); }
@@ -161,12 +162,14 @@
 
   section[data-view="home"] .page-title { color: var(--accent-home); }
   section[data-view="fitness"] > .page-title { color: var(--accent-workout); }
+  section[data-view="calories"] > .page-title { color: var(--accent-food); }
   section[data-view="sleep"] > .page-title { color: var(--accent-sleep); }
   section[data-view="friends"] > .page-title { color: var(--accent-friends); }
   section[data-view="study"] > .page-title { color: var(--accent-study); }
   section[data-view="admin"] > .page-title { color: var(--accent-admin); }
 
   section[data-view="fitness"] { --accent: var(--accent-workout); --on-accent: #2a2118; }
+  section[data-view="calories"] { --accent: var(--accent-food); --on-accent: #2a2118; }
   section[data-view="sleep"] { --accent: var(--accent-sleep); }
   section[data-view="friends"] { --accent: var(--accent-friends); }
   section[data-view="admin"] { --accent: var(--accent-admin); }
@@ -1073,6 +1076,7 @@
       <nav class="nav">
         <a href="#/" class="nav-link" data-route="home">Home</a>
         <a href="#/fitness" class="nav-link" data-route="fitness">Fitness</a>
+        <a href="#/calories" class="nav-link" data-route="calories">Calories</a>
         <a href="#/sleep" class="nav-link" data-route="sleep">Sleep</a>
         <a href="#/study" class="nav-link" data-route="study">Study</a>
         <a href="#/friends" class="nav-link" data-route="friends">Friends</a>
@@ -1098,7 +1102,7 @@
     <p class="page-subtitle">Here's your day at a glance.</p>
     <div class="tile-grid">
       <a href="#/fitness" class="tile card-fitness">
-        <div class="tile-header">🔥 Fitness</div>
+        <div class="tile-header">🏋️ Fitness</div>
         <div class="tile-body" id="home-fitness-body">
           <div class="stat-row">
             <div class="stat-text">
@@ -1106,6 +1110,18 @@
               <p class="tile-sub">Set up your plan →</p>
             </div>
             <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="home-fitness-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="home-fitness-ring-label">0%</span></div>
+          </div>
+        </div>
+      </a>
+      <a href="#/calories" class="tile accent-food">
+        <div class="tile-header">🍎 Calories</div>
+        <div class="tile-body" id="home-calories-body">
+          <div class="stat-row">
+            <div class="stat-text">
+              <p class="tile-number display">Soon</p>
+              <p class="tile-sub">Set up your plan →</p>
+            </div>
+            <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="home-calories-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="home-calories-ring-label">0%</span></div>
           </div>
         </div>
       </a>
@@ -1351,42 +1367,14 @@
   </section>
 
   <section data-view="fitness" hidden>
-    <h1 class="page-title display">Fitness 🔥</h1>
-    <p class="page-subtitle">Your eating and training plan, built around your goal — plus today's log.</p>
+    <h1 class="page-title display">Fitness 🏋️</h1>
+    <p class="page-subtitle">Your training plan, built around your muscle goal — plus today's log.</p>
 
     <div id="onboarding-view">
       <section class="panel">
         <div class="panel-header">Tell us about your goal</div>
         <div class="panel-body">
           <form id="onboarding-form" class="onboarding-form">
-            <div>
-              <h3 class="group-label">About you</h3>
-              <p class="plan-caption" id="ob-body-stats-line">—</p>
-              <a href="#" id="ob-edit-body-link" class="auth-switch" style="display:inline-block; margin-top:4px;">Update my age / weight / height</a>
-            </div>
-
-            <div>
-              <h3 class="group-label">Weight goal</h3>
-              <div class="field-row">
-                <div class="field">
-                  <label for="ob-direction">Direction</label>
-                  <select id="ob-direction" required>
-                    <option value="" disabled selected>Choose one</option>
-                    <option value="lose">Lose weight</option>
-                    <option value="gain">Gain weight</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="ob-amount">By how much (kg)</label>
-                  <input type="number" id="ob-amount" min="0.5" max="100" step="0.5" required>
-                </div>
-                <div class="field">
-                  <label for="ob-duration">Over how many months</label>
-                  <input type="number" id="ob-duration" min="1" max="36" step="1" required>
-                </div>
-              </div>
-            </div>
-
             <div>
               <h3 class="group-label">Muscle &amp; strength goal</h3>
               <div class="radio-row" id="ob-muscle-group">
@@ -1416,18 +1404,6 @@
 
     <div id="fitness-dashboard" hidden>
       <div class="tile-grid" style="margin-bottom: 24px;">
-        <div class="tile card-fitness accent-food">
-          <div class="tile-header">🔥 Calories today</div>
-          <div class="tile-body">
-            <div class="stat-row">
-              <div class="stat-text">
-                <p class="tile-number display"><span id="today-cal-total">0</span><span style="font-size:16px; font-family:'Manrope',sans-serif; font-weight:700; letter-spacing:0;"> / <span id="today-cal-target">0</span> kcal</span></p>
-                <p class="tile-sub muted" id="today-cal-compare">Yesterday: 0 kcal</p>
-              </div>
-              <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="today-cal-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="today-cal-ring-label">0%</span></div>
-            </div>
-          </div>
-        </div>
         <div class="tile card-fitness">
           <div class="tile-header">🏋️ Workout today</div>
           <div class="tile-body">
@@ -1439,58 +1415,18 @@
 
       <section class="panel">
         <div class="panel-header">
-          <span>Your plan</span>
+          <span>Your workout plan</span>
           <button type="button" class="btn-ghost" id="edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
         </div>
         <div class="panel-body">
           <p class="plan-caption" id="plan-goal-line">Goal: —</p>
-          <div class="plan-grid">
-            <div class="accent-food">
-              <h3 class="group-label">Eating plan</h3>
-              <p class="plan-headline display"><span id="plan-calories">0</span> kcal/day</p>
-              <p class="plan-caption" id="plan-protein">Protein target: 0 g/day</p>
-              <ul class="food-tips" id="plan-food-tips"></ul>
-            </div>
-            <div>
-              <h3 class="group-label">Workout plan</h3>
-              <p class="plan-caption" id="plan-frequency">—</p>
-              <div class="split-toggle">
-                <button type="button" class="split-btn active" id="split-gym-btn">Gym</button>
-                <button type="button" class="split-btn" id="split-home-btn">Home</button>
-              </div>
-              <ul class="exercise-list" id="plan-exercises-gym"></ul>
-              <ul class="exercise-list" id="plan-exercises-home" hidden></ul>
-            </div>
+          <p class="plan-caption" id="plan-frequency">—</p>
+          <div class="split-toggle">
+            <button type="button" class="split-btn active" id="split-gym-btn">Gym</button>
+            <button type="button" class="split-btn" id="split-home-btn">Home</button>
           </div>
-        </div>
-      </section>
-
-      <section class="panel accent-food">
-        <div class="panel-header">Log today's food</div>
-        <div class="panel-body">
-          <form id="food-form" class="food-form">
-            <div class="field field-wide">
-              <label for="food-name">Food / meal</label>
-              <input type="text" id="food-name" placeholder="e.g. Chicken &amp; rice bowl" required>
-            </div>
-            <div class="field">
-              <label for="food-calories">Calories</label>
-              <input type="number" id="food-calories" min="1" step="1" placeholder="450" required>
-            </div>
-            <div class="field">
-              <label for="food-date">Date</label>
-              <input type="date" id="food-date" required>
-            </div>
-            <button type="submit" class="btn-submit">Add</button>
-          </form>
-        </div>
-      </section>
-
-      <section class="panel accent-food">
-        <div class="panel-header">Food log</div>
-        <div class="panel-body">
-          <ul class="entry-list" id="food-list"></ul>
-          <p class="empty-state" id="food-empty" hidden>Nothing logged yet — add your first meal above!</p>
+          <ul class="exercise-list" id="plan-exercises-gym"></ul>
+          <ul class="exercise-list" id="plan-exercises-home" hidden></ul>
         </div>
       </section>
 
@@ -1524,6 +1460,118 @@
         <div class="panel-body">
           <ul class="entry-list" id="workout-list"></ul>
           <p class="empty-state" id="workout-empty" hidden>No workouts logged yet — add your first one above!</p>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section data-view="calories" hidden>
+    <h1 class="page-title display">Calories 🍎</h1>
+    <p class="page-subtitle">Your eating plan, an AI-built meal guide, and today's food log.</p>
+
+    <div id="calories-onboarding-view">
+      <section class="panel">
+        <div class="panel-header">Tell us about your goal</div>
+        <div class="panel-body">
+          <form id="calories-onboarding-form" class="onboarding-form">
+            <div>
+              <h3 class="group-label">About you</h3>
+              <p class="plan-caption" id="cal-body-stats-line">—</p>
+              <a href="#" id="cal-edit-body-link" class="auth-switch" style="display:inline-block; margin-top:4px;">Update my age / weight / height</a>
+            </div>
+
+            <div>
+              <h3 class="group-label">Weight goal</h3>
+              <div class="field-row">
+                <div class="field">
+                  <label for="cal-direction">Direction</label>
+                  <select id="cal-direction" required>
+                    <option value="" disabled selected>Choose one</option>
+                    <option value="lose">Lose weight</option>
+                    <option value="gain">Gain weight</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="cal-amount">By how much (kg)</label>
+                  <input type="number" id="cal-amount" min="0.5" max="100" step="0.5" required>
+                </div>
+                <div class="field">
+                  <label for="cal-duration">Over how many months</label>
+                  <input type="number" id="cal-duration" min="1" max="36" step="1" required>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit btn-onboard">Build my eating plan 🍎</button>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <div id="calories-dashboard" hidden>
+      <div class="tile-grid" style="margin-bottom: 24px;">
+        <div class="tile accent-food">
+          <div class="tile-header">🍎 Calories today</div>
+          <div class="tile-body">
+            <div class="stat-row">
+              <div class="stat-text">
+                <p class="tile-number display"><span id="cal-today-total">0</span><span style="font-size:16px; font-family:'Manrope',sans-serif; font-weight:700; letter-spacing:0;"> / <span id="cal-today-target">0</span> kcal</span></p>
+                <p class="tile-sub muted" id="cal-today-compare">Yesterday: 0 kcal</p>
+              </div>
+              <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="cal-today-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="cal-today-ring-label">0%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="panel accent-food">
+        <div class="panel-header">
+          <span>Your eating plan</span>
+          <button type="button" class="btn-ghost" id="cal-edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
+        </div>
+        <div class="panel-body">
+          <p class="plan-caption" id="cal-goal-line">Goal: —</p>
+          <p class="plan-headline display"><span id="cal-plan-calories">0</span> kcal/day</p>
+          <p class="plan-caption" id="cal-plan-protein">Protein target: 0 g/day</p>
+        </div>
+      </section>
+
+      <section class="panel accent-food">
+        <div class="panel-header">Your AI meal plan</div>
+        <div class="panel-body">
+          <p class="plan-caption" id="cal-ai-loading" hidden>Cooking up your plan… 🍳</p>
+          <p class="plan-caption" id="cal-ai-error" hidden style="color:#c0392b;"></p>
+          <div id="cal-ai-plan"></div>
+          <button type="button" class="btn-ghost" id="cal-regenerate-btn" style="margin-top:12px;">Regenerate plan 🔄</button>
+        </div>
+      </section>
+
+      <section class="panel accent-food">
+        <div class="panel-header">Log today's food</div>
+        <div class="panel-body">
+          <form id="food-form" class="food-form">
+            <div class="field field-wide">
+              <label for="food-name">Food / meal</label>
+              <input type="text" id="food-name" placeholder="e.g. Chicken &amp; rice bowl" required>
+            </div>
+            <div class="field">
+              <label for="food-calories">Calories</label>
+              <input type="number" id="food-calories" min="1" step="1" placeholder="450" required>
+            </div>
+            <div class="field">
+              <label for="food-date">Date</label>
+              <input type="date" id="food-date" required>
+            </div>
+            <button type="submit" class="btn-submit">Add</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel accent-food">
+        <div class="panel-header">Food log</div>
+        <div class="panel-body">
+          <ul class="entry-list" id="food-list"></ul>
+          <p class="empty-state" id="food-empty" hidden>Nothing logged yet — add your first meal above!</p>
         </div>
       </section>
     </div>
@@ -1732,12 +1780,6 @@
   }
 
   // ---- Plan generation ----
-  const ACTIVITY_FACTOR = { toning: 1.35, moderate: 1.45, serious: 1.55 };
-  const CALORIE_ADJUSTMENT = {
-    lose: { toning: 500, moderate: 400, serious: 300 },
-    gain: { toning: 200, moderate: 300, serious: 400 },
-  };
-  const PROTEIN_FACTOR = { toning: 1.6, moderate: 1.9, serious: 2.2 };
   const MUSCLE_LABEL = { toning: "general toning", moderate: "moderate muscle gain", serious: "serious muscle gain" };
 
   const WORKOUT_PLANS = {
@@ -1799,55 +1841,6 @@
     },
   };
 
-  function generatePlan(profile) {
-    const { weight, height, age, goalDirection, goalAmount, muscleGoal, durationMonths } = profile;
-    const bmr = 10 * weight + 6.25 * height - 5 * age - 78;
-    const tdee = bmr * ACTIVITY_FACTOR[muscleGoal];
-
-    // Spread the total calorie change needed across the timeline the person chose.
-    const totalKcalChange = goalAmount * 7700;
-    const totalDays = Math.max(1, Math.round((durationMonths || 1) * 30.4));
-    let dailyAdjustment = Math.round(totalKcalChange / totalDays);
-
-    // Safety clamp — keep the daily deficit/surplus in a healthy range even if the
-    // chosen timeline was very aggressive, and note when that happens.
-    const SAFE_MAX_ADJUSTMENT = 1000;
-    const SAFE_MIN_ADJUSTMENT = 50;
-    const clamped = dailyAdjustment > SAFE_MAX_ADJUSTMENT;
-    dailyAdjustment = Math.min(SAFE_MAX_ADJUSTMENT, Math.max(SAFE_MIN_ADJUSTMENT, dailyAdjustment));
-
-    let calorieTarget = Math.round(goalDirection === "lose" ? tdee - dailyAdjustment : tdee + dailyAdjustment);
-    const MIN_CALORIES = 1200;
-    if (goalDirection === "lose" && calorieTarget < MIN_CALORIES) calorieTarget = MIN_CALORIES;
-
-    const proteinTarget = Math.round(weight * PROTEIN_FACTOR[muscleGoal]);
-    const actualDays = dailyAdjustment > 0 ? Math.round(totalKcalChange / dailyAdjustment) : null;
-    const estWeeks = actualDays ? Math.max(1, Math.round(actualDays / 7)) : null;
-    return { calorieTarget, proteinTarget, dailyAdjustment, durationMonths, estWeeks, clamped };
-  }
-
-  function buildFoodTips(profile, plan) {
-    const tips = [];
-    const mealSplit = [
-      ["Breakfast", 0.25],
-      ["Lunch", 0.35],
-      ["Dinner", 0.30],
-      ["Snacks", 0.10],
-    ].map(([name, pct]) => `${name} ~${Math.round(plan.calorieTarget * pct)} kcal`).join(" · ");
-    tips.push(`Rough daily split: ${mealSplit}.`);
-    tips.push(`Aim for ~${plan.proteinTarget}g protein/day — lean meats, eggs, Greek yogurt, tofu, legumes.`);
-    tips.push("Carbs fuel your training — whole grains, fruit, potatoes, oats.");
-    tips.push("Healthy fats in moderation — nuts, olive oil, avocado.");
-    tips.push("Vegetables with most meals for fiber and micronutrients.");
-    tips.push("Water: roughly 2–3 liters a day.");
-    if (profile.goalDirection === "lose") {
-      tips.push(`You're in a ~${plan.dailyAdjustment} kcal/day deficit — keep portions modest and prioritize protein to stay full.`);
-    } else {
-      tips.push(`You're in a ~${plan.dailyAdjustment} kcal/day surplus to support muscle growth — don't skip meals.`);
-    }
-    return tips;
-  }
-
   // ---- Onboarding form ----
   function updateMuscleCardStyles() {
     document.querySelectorAll("#ob-muscle-group .radio-card").forEach((card) => {
@@ -1856,22 +1849,8 @@
     });
   }
 
-  function updateBodyStatsLine() {
-    const el = document.getElementById("ob-body-stats-line");
-    if (!el) return;
-    if (hasCompleteBodyProfile(bodyProfile)) {
-      el.textContent = `${bodyProfile.age} years old · ${bodyProfile.weight_kg} kg · ${bodyProfile.height_cm} cm`;
-    } else {
-      el.textContent = "—";
-    }
-  }
-
   function prefillOnboardingForm(profile) {
-    updateBodyStatsLine();
     if (!profile) return;
-    document.getElementById("ob-direction").value = profile.goalDirection;
-    document.getElementById("ob-amount").value = profile.goalAmount;
-    document.getElementById("ob-duration").value = profile.durationMonths;
     const radio = document.querySelector(`input[name="ob-muscle"][value="${profile.muscleGoal}"]`);
     if (radio) radio.checked = true;
     updateMuscleCardStyles();
@@ -1886,9 +1865,6 @@
       const muscleInput = document.querySelector('input[name="ob-muscle"]:checked');
       if (!muscleInput) return;
       const profile = {
-        goalDirection: document.getElementById("ob-direction").value,
-        goalAmount: parseFloat(document.getElementById("ob-amount").value),
-        durationMonths: parseFloat(document.getElementById("ob-duration").value),
         muscleGoal: muscleInput.value,
         onboardedAt: getProfile()?.onboardedAt || new Date().toISOString(),
       };
@@ -1902,36 +1878,11 @@
       refreshAll();
       prefillOnboardingForm(getProfile());
     });
-
-    document.getElementById("ob-edit-body-link").addEventListener("click", (e) => {
-      e.preventDefault();
-      prefillProfileSetupForm(bodyProfile);
-      document.getElementById("app-screen").hidden = true;
-      document.getElementById("profile-setup-screen").hidden = false;
-    });
   }
 
   // ---- Fitness dashboard rendering ----
-  function renderPlanPanel(profile, plan) {
-    const goalWord = profile.goalDirection === "lose" ? "Lose" : "Gain";
-    let paceNote;
-    if (plan.clamped) {
-      paceNote = ` — your ${plan.durationMonths}-month timeline was a bit aggressive, so we capped it at a safer ${plan.dailyAdjustment} kcal/day (about ${plan.estWeeks} week${plan.estWeeks === 1 ? "" : "s"} realistically)`;
-    } else {
-      paceNote = ` over about ${plan.durationMonths} month${plan.durationMonths === 1 ? "" : "s"}`;
-    }
-    document.getElementById("plan-goal-line").textContent =
-      `Goal: ${goalWord} ${profile.goalAmount} kg with ${MUSCLE_LABEL[profile.muscleGoal]}${paceNote}.`;
-    document.getElementById("plan-calories").textContent = plan.calorieTarget.toLocaleString();
-    document.getElementById("plan-protein").textContent = `Protein target: ${plan.proteinTarget} g/day`;
-
-    const tipsEl = document.getElementById("plan-food-tips");
-    tipsEl.innerHTML = "";
-    buildFoodTips(profile, plan).forEach((tip) => {
-      const li = document.createElement("li");
-      li.textContent = tip;
-      tipsEl.appendChild(li);
-    });
+  function renderWorkoutPlanPanel(profile) {
+    document.getElementById("plan-goal-line").textContent = `Goal: ${MUSCLE_LABEL[profile.muscleGoal]}.`;
 
     const workoutPlan = WORKOUT_PLANS[profile.muscleGoal];
     document.getElementById("plan-frequency").textContent = workoutPlan.frequency;
@@ -2093,20 +2044,10 @@
     maybeConfetti();
   }
 
-  function renderTodayStrip(profile, plan) {
+  function renderTodayWorkoutStrip() {
     const today = todayISO();
     const yesterday = yesterdayISO();
-    const food = getFood();
     const workouts = getWorkouts();
-
-    const todayCals = food.filter((f) => f.date === today).reduce((s, f) => s + f.calories, 0);
-    const yesterdayCals = food.filter((f) => f.date === yesterday).reduce((s, f) => s + f.calories, 0);
-
-    document.getElementById("today-cal-total").textContent = todayCals.toLocaleString();
-    document.getElementById("today-cal-target").textContent = plan.calorieTarget.toLocaleString();
-    const pct = plan.calorieTarget > 0 ? Math.min(100, Math.round((todayCals / plan.calorieTarget) * 100)) : 0;
-    setRingProgress("today-cal-ring", pct);
-    document.getElementById("today-cal-compare").textContent = `Yesterday: ${yesterdayCals.toLocaleString()} kcal`;
 
     const didToday = workouts.some((w) => w.date === today);
     const didYesterday = workouts.some((w) => w.date === yesterday);
@@ -2249,25 +2190,20 @@
       onboardingView.hidden = false;
       dash.hidden = true;
       if (profile) prefillOnboardingForm(profile);
-      else updateBodyStatsLine();
       return;
     }
 
     onboardingView.hidden = true;
     dash.hidden = false;
-    const fullProfile = withBodyStats(profile);
-    const plan = generatePlan(fullProfile);
-    renderPlanPanel(profile, plan);
-    renderTodayStrip(profile, plan);
-    renderFoodList();
+    renderWorkoutPlanPanel(profile);
+    renderTodayWorkoutStrip();
     renderWorkoutList();
   }
 
   function refreshHomeFitnessTile() {
     const body = document.getElementById("home-fitness-body");
     const profile = getProfile();
-    const fullProfile = withBodyStats(profile);
-    if (!fullProfile) {
+    if (!profile) {
       body.innerHTML = `
         <div class="stat-row">
           <div class="stat-text">
@@ -2280,21 +2216,269 @@
       setRingProgress("home-fitness-ring", 0);
       return;
     }
-    const plan = generatePlan(fullProfile);
     const today = todayISO();
-    const todayCals = getFood().filter((f) => f.date === today).reduce((s, f) => s + f.calories, 0);
-    const pct = plan.calorieTarget > 0 ? Math.min(100, Math.round((todayCals / plan.calorieTarget) * 100)) : 0;
     const didToday = getWorkouts().some((w) => w.date === today);
+    const didYesterday = getWorkouts().some((w) => w.date === yesterdayISO());
     body.innerHTML = `
       <div class="stat-row">
         <div class="stat-text">
-          <p class="tile-number display">${todayCals.toLocaleString()} <span style="font-size:15px; font-family:'Manrope',sans-serif; font-weight:700; letter-spacing:0; color: var(--ink-dim);">/ ${plan.calorieTarget.toLocaleString()} kcal</span></p>
-          <p class="tile-sub ${didToday ? "" : "muted"}">${didToday ? "✅ Workout done" : "— No workout logged yet"}</p>
+          <p class="tile-number display">${didToday ? "Done ✅" : "Not yet"}</p>
+          <p class="tile-sub ${didYesterday ? "" : "muted"}">Yesterday: ${didYesterday ? "done" : "rest day"}</p>
         </div>
         ${ringSVG("home-fitness-ring")}
       </div>
     `;
-    setRingProgress("home-fitness-ring", pct);
+    setRingProgress("home-fitness-ring", didToday ? 100 : 0);
+  }
+
+  // ---- Calories (Supabase-backed, Gemini AI eating plan) ----
+  let editingCalorieProfile = false;
+  const CALORIE_ACTIVITY_FACTOR = 1.4; // general moderately-active default
+  const CALORIE_PROTEIN_FACTOR = { lose: 1.8, gain: 2.0 };
+
+  function generateCalorieTargets(profile) {
+    const { weight, height, age, goalDirection, goalAmount, durationMonths } = profile;
+    const bmr = 10 * weight + 6.25 * height - 5 * age - 78;
+    const tdee = bmr * CALORIE_ACTIVITY_FACTOR;
+
+    // Spread the total calorie change needed across the timeline the person chose.
+    const totalKcalChange = goalAmount * 7700;
+    const totalDays = Math.max(1, Math.round((durationMonths || 1) * 30.4));
+    let dailyAdjustment = Math.round(totalKcalChange / totalDays);
+
+    // Safety clamp — keep the daily deficit/surplus in a healthy range even if the
+    // chosen timeline was very aggressive, and note when that happens.
+    const SAFE_MAX_ADJUSTMENT = 1000;
+    const SAFE_MIN_ADJUSTMENT = 50;
+    const clamped = dailyAdjustment > SAFE_MAX_ADJUSTMENT;
+    dailyAdjustment = Math.min(SAFE_MAX_ADJUSTMENT, Math.max(SAFE_MIN_ADJUSTMENT, dailyAdjustment));
+
+    let calorieTarget = Math.round(goalDirection === "lose" ? tdee - dailyAdjustment : tdee + dailyAdjustment);
+    const MIN_CALORIES = 1200;
+    if (goalDirection === "lose" && calorieTarget < MIN_CALORIES) calorieTarget = MIN_CALORIES;
+
+    const proteinTarget = Math.round(weight * CALORIE_PROTEIN_FACTOR[goalDirection]);
+    const actualDays = dailyAdjustment > 0 ? Math.round(totalKcalChange / dailyAdjustment) : null;
+    const estWeeks = actualDays ? Math.max(1, Math.round(actualDays / 7)) : null;
+    return { calorieTarget, proteinTarget, dailyAdjustment, durationMonths, estWeeks, clamped };
+  }
+
+  async function getCalorieProfile() {
+    if (!currentUser) return null;
+    const { data } = await sb.from("calorie_profiles").select("*").eq("user_id", currentUser.id).maybeSingle();
+    return data;
+  }
+
+  async function saveCalorieProfile(row) {
+    await sb.from("calorie_profiles").upsert({ user_id: currentUser.id, ...row, updated_at: new Date().toISOString() });
+  }
+
+  async function callCaloriesAI(payload) {
+    const { data, error } = await sb.functions.invoke("calories-ai", { body: payload });
+    if (error) {
+      let message = error.message || "Request failed";
+      try {
+        const ctx = await error.context?.json?.();
+        if (ctx?.error) message = ctx.error;
+      } catch (e) {}
+      throw new Error(message);
+    }
+    return data;
+  }
+
+  function updateCalBodyStatsLine() {
+    const el = document.getElementById("cal-body-stats-line");
+    if (!el) return;
+    if (hasCompleteBodyProfile(bodyProfile)) {
+      el.textContent = `${bodyProfile.age} years old · ${bodyProfile.weight_kg} kg · ${bodyProfile.height_cm} cm`;
+    } else {
+      el.textContent = "—";
+    }
+  }
+
+  function prefillCaloriesOnboardingForm(row) {
+    updateCalBodyStatsLine();
+    if (!row) return;
+    document.getElementById("cal-direction").value = row.goal_direction;
+    document.getElementById("cal-amount").value = row.goal_amount;
+    document.getElementById("cal-duration").value = row.duration_months;
+  }
+
+  function renderAiPlan(plan) {
+    const planEl = document.getElementById("cal-ai-plan");
+    if (!planEl) return;
+    if (!plan) {
+      planEl.innerHTML = `<p class="plan-caption muted">No AI plan yet — hit "Regenerate plan" below.</p>`;
+      return;
+    }
+    const mealsHtml = (plan.meals || []).map((m) => `
+      <div style="margin-bottom:14px;">
+        <h3 class="group-label">${escapeHtml(m.name || "")}${m.calories ? ` <span class="muted" style="font-weight:600;">~${m.calories} kcal</span>` : ""}</h3>
+        <ul class="food-tips">
+          ${(m.items || []).map((it) => `<li>${escapeHtml(it)}</li>`).join("")}
+        </ul>
+      </div>
+    `).join("");
+    const tipsHtml = (plan.tips || []).map((t) => `<li>${escapeHtml(t)}</li>`).join("");
+    planEl.innerHTML = `
+      ${mealsHtml}
+      ${tipsHtml ? `<h3 class="group-label">Tips</h3><ul class="food-tips">${tipsHtml}</ul>` : ""}
+    `;
+  }
+
+  async function generateAiEatingPlan() {
+    const row = await getCalorieProfile();
+    if (!row || !hasCompleteBodyProfile(bodyProfile)) return;
+    const loadingEl = document.getElementById("cal-ai-loading");
+    const errorEl = document.getElementById("cal-ai-error");
+    if (loadingEl) loadingEl.hidden = false;
+    if (errorEl) errorEl.hidden = true;
+    try {
+      const result = await callCaloriesAI({
+        action: "generate_eating_plan",
+        age: bodyProfile.age,
+        weight_kg: bodyProfile.weight_kg,
+        height_cm: bodyProfile.height_cm,
+        goal_direction: row.goal_direction,
+        goal_amount: row.goal_amount,
+        duration_months: row.duration_months,
+        calorie_target: row.calorie_target,
+        protein_target: row.protein_target,
+      });
+      await saveCalorieProfile({
+        goal_direction: row.goal_direction,
+        goal_amount: row.goal_amount,
+        duration_months: row.duration_months,
+        calorie_target: row.calorie_target,
+        protein_target: row.protein_target,
+        ai_plan: result.plan,
+      });
+      renderAiPlan(result.plan);
+    } catch (err) {
+      if (errorEl) {
+        errorEl.textContent = "Couldn't generate your AI plan — " + err.message;
+        errorEl.hidden = false;
+      }
+    } finally {
+      if (loadingEl) loadingEl.hidden = true;
+    }
+  }
+
+  function initCaloriesOnboardingForm() {
+    const form = document.getElementById("calories-onboarding-form");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const direction = document.getElementById("cal-direction").value;
+      const amount = parseFloat(document.getElementById("cal-amount").value);
+      const duration = parseFloat(document.getElementById("cal-duration").value);
+      if (!direction || !amount || !duration) return;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      const fullProfile = withBodyStats({ goalDirection: direction, goalAmount: amount, durationMonths: duration });
+      if (!fullProfile) { submitBtn.disabled = false; return; }
+      const targets = generateCalorieTargets(fullProfile);
+      await saveCalorieProfile({
+        goal_direction: direction,
+        goal_amount: amount,
+        duration_months: duration,
+        calorie_target: targets.calorieTarget,
+        protein_target: targets.proteinTarget,
+        ai_plan: null,
+      });
+      editingCalorieProfile = false;
+      submitBtn.disabled = false;
+      await refreshAll();
+      generateAiEatingPlan();
+    });
+
+    document.getElementById("cal-edit-plan-btn").addEventListener("click", async () => {
+      editingCalorieProfile = true;
+      await refreshAll();
+      const row = await getCalorieProfile();
+      prefillCaloriesOnboardingForm(row);
+    });
+
+    document.getElementById("cal-edit-body-link").addEventListener("click", (e) => {
+      e.preventDefault();
+      prefillProfileSetupForm(bodyProfile);
+      document.getElementById("app-screen").hidden = true;
+      document.getElementById("profile-setup-screen").hidden = false;
+    });
+
+    document.getElementById("cal-regenerate-btn").addEventListener("click", () => generateAiEatingPlan());
+  }
+
+  async function renderCaloriesSection() {
+    const onboardingView = document.getElementById("calories-onboarding-view");
+    const dash = document.getElementById("calories-dashboard");
+    if (!onboardingView || !dash) return;
+    const row = await getCalorieProfile();
+
+    if (!row || editingCalorieProfile) {
+      onboardingView.hidden = false;
+      dash.hidden = true;
+      if (row) prefillCaloriesOnboardingForm(row);
+      else updateCalBodyStatsLine();
+      return;
+    }
+
+    onboardingView.hidden = true;
+    dash.hidden = false;
+
+    const goalWord = row.goal_direction === "lose" ? "Lose" : "Gain";
+    document.getElementById("cal-goal-line").textContent =
+      `Goal: ${goalWord} ${row.goal_amount} kg over about ${row.duration_months} month${row.duration_months === 1 ? "" : "s"}.`;
+    document.getElementById("cal-plan-calories").textContent = row.calorie_target.toLocaleString();
+    document.getElementById("cal-plan-protein").textContent = `Protein target: ${row.protein_target} g/day`;
+
+    const today = todayISO();
+    const yesterday = yesterdayISO();
+    const food = getFood();
+    const todayCals = food.filter((f) => f.date === today).reduce((s, f) => s + f.calories, 0);
+    const yesterdayCals = food.filter((f) => f.date === yesterday).reduce((s, f) => s + f.calories, 0);
+    document.getElementById("cal-today-total").textContent = todayCals.toLocaleString();
+    document.getElementById("cal-today-target").textContent = row.calorie_target.toLocaleString();
+    const pct = row.calorie_target > 0 ? Math.min(100, Math.round((todayCals / row.calorie_target) * 100)) : 0;
+    setRingProgress("cal-today-ring", pct);
+    document.getElementById("cal-today-compare").textContent = `Yesterday: ${yesterdayCals.toLocaleString()} kcal`;
+
+    renderAiPlan(row.ai_plan);
+    if (!row.ai_plan) generateAiEatingPlan();
+
+    renderFoodList();
+  }
+
+  async function refreshHomeCaloriesTile() {
+    const body = document.getElementById("home-calories-body");
+    if (!body) return;
+    const row = await getCalorieProfile();
+    if (!row) {
+      body.innerHTML = `
+        <div class="stat-row">
+          <div class="stat-text">
+            <p class="tile-number display">Soon</p>
+            <p class="tile-sub">Set up your plan →</p>
+          </div>
+          ${ringSVG("home-calories-ring")}
+        </div>
+      `;
+      setRingProgress("home-calories-ring", 0);
+      return;
+    }
+    const today = todayISO();
+    const todayCals = getFood().filter((f) => f.date === today).reduce((s, f) => s + f.calories, 0);
+    const pct = row.calorie_target > 0 ? Math.min(100, Math.round((todayCals / row.calorie_target) * 100)) : 0;
+    body.innerHTML = `
+      <div class="stat-row">
+        <div class="stat-text">
+          <p class="tile-number display">${todayCals.toLocaleString()} <span style="font-size:15px; font-family:'Manrope',sans-serif; font-weight:700; letter-spacing:0; color: var(--ink-dim);">/ ${row.calorie_target.toLocaleString()} kcal</span></p>
+          <p class="tile-sub muted">Today's food log</p>
+        </div>
+        ${ringSVG("home-calories-ring")}
+      </div>
+    `;
+    setRingProgress("home-calories-ring", pct);
   }
 
   // ---- Sleep (Supabase-backed) ----
@@ -2597,11 +2781,13 @@
     });
   }
 
-  function refreshAll() {
+  async function refreshAll() {
     refreshHomeFitnessTile();
+    await refreshHomeCaloriesTile();
     refreshHomeSleepTile();
     refreshHomeFriendsTile();
     renderFitnessSection();
+    await renderCaloriesSection();
     renderHomeStreak();
     syncActivitySummary();
     checkDailyGoalsCelebration();
@@ -3255,7 +3441,7 @@
   }
 
   // ---- Routing ----
-  const ROUTES = ["home", "fitness", "sleep", "study", "friends", "admin"];
+  const ROUTES = ["home", "fitness", "calories", "sleep", "study", "friends", "admin"];
   let pendingAddFriendId = null;
 
   function currentRoute() {
@@ -3524,6 +3710,7 @@
     initAuthForms();
     initProfileSetupForm();
     initOnboardingForm();
+    initCaloriesOnboardingForm();
     initSplitToggle();
     initFoodForm();
     initWorkoutForm();
