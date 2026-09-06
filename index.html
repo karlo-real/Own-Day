@@ -1037,6 +1037,33 @@
   </div>
 </div>
 
+<div id="profile-setup-screen" hidden>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="brand" style="justify-content:center; margin-bottom:24px;">
+        <span class="brand-mark">☀️</span>Own Day
+      </div>
+      <h2 class="group-label" style="margin-bottom:6px;">Tell us about you</h2>
+      <p class="plan-caption" style="margin-bottom:20px;">Just once — we'll use this everywhere in the app so you don't have to repeat it.</p>
+      <form id="profile-setup-form" class="auth-form">
+        <div class="field">
+          <label for="profile-age">Age (years)</label>
+          <input type="number" id="profile-age" min="10" max="100" step="1" required>
+        </div>
+        <div class="field">
+          <label for="profile-weight">Weight (kg)</label>
+          <input type="number" id="profile-weight" min="20" max="400" step="0.1" required>
+        </div>
+        <div class="field">
+          <label for="profile-height">Height (cm)</label>
+          <input type="number" id="profile-height" min="100" max="250" step="0.1" required>
+        </div>
+        <button type="submit" class="btn-submit btn-onboard">Continue 🚀</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div id="app-screen" hidden>
 
 <header class="topbar">
@@ -1131,10 +1158,6 @@
         <div class="panel-body">
           <form id="sleep-onboarding-form" class="onboarding-form">
             <div class="field-row">
-              <div class="field">
-                <label for="sleep-ob-age">Age (years)</label>
-                <input type="number" id="sleep-ob-age" min="5" max="100" required>
-              </div>
               <div class="field">
                 <label for="sleep-ob-target">Target sleep (hours)</label>
                 <input type="number" id="sleep-ob-target" min="4" max="12" step="0.5" required>
@@ -1338,20 +1361,8 @@
           <form id="onboarding-form" class="onboarding-form">
             <div>
               <h3 class="group-label">About you</h3>
-              <div class="field-row">
-                <div class="field">
-                  <label for="ob-weight">Current weight (kg)</label>
-                  <input type="number" id="ob-weight" min="20" max="400" step="0.1" required>
-                </div>
-                <div class="field">
-                  <label for="ob-height">Height (cm)</label>
-                  <input type="number" id="ob-height" min="100" max="250" step="0.1" required>
-                </div>
-                <div class="field">
-                  <label for="ob-age">Age (years)</label>
-                  <input type="number" id="ob-age" min="10" max="100" step="1" required>
-                </div>
-              </div>
+              <p class="plan-caption" id="ob-body-stats-line">—</p>
+              <a href="#" id="ob-edit-body-link" class="auth-switch" style="display:inline-block; margin-top:4px;">Update my age / weight / height</a>
             </div>
 
             <div>
@@ -1368,6 +1379,10 @@
                 <div class="field">
                   <label for="ob-amount">By how much (kg)</label>
                   <input type="number" id="ob-amount" min="0.5" max="100" step="0.5" required>
+                </div>
+                <div class="field">
+                  <label for="ob-duration">Over how many months</label>
+                  <input type="number" id="ob-duration" min="1" max="36" step="1" required>
                 </div>
               </div>
             </div>
@@ -1605,6 +1620,48 @@
   let pendingAuthMode = null;
   let editingProfile = false;
   let activeSplit = "gym";
+  let bodyProfile = null;
+
+  // ---- Body profile (global — age/weight/height, shared across the whole app) ----
+  async function fetchBodyProfile() {
+    if (!currentUser) return null;
+    const { data } = await sb.from("profiles").select("age, weight_kg, height_cm").eq("id", currentUser.id).maybeSingle();
+    return data;
+  }
+
+  function hasCompleteBodyProfile(p) {
+    return !!(p && p.age && p.weight_kg && p.height_cm);
+  }
+
+  async function saveBodyProfile({ age, weight, height }) {
+    await sb.from("profiles").update({ age, weight_kg: weight, height_cm: height }).eq("id", currentUser.id);
+    bodyProfile = { age, weight_kg: weight, height_cm: height };
+  }
+
+  function prefillProfileSetupForm(profile) {
+    if (!profile) return;
+    document.getElementById("profile-age").value = profile.age || "";
+    document.getElementById("profile-weight").value = profile.weight_kg || "";
+    document.getElementById("profile-height").value = profile.height_cm || "";
+  }
+
+  function initProfileSetupForm() {
+    document.getElementById("profile-setup-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const age = parseInt(document.getElementById("profile-age").value, 10);
+      const weight = parseFloat(document.getElementById("profile-weight").value);
+      const height = parseFloat(document.getElementById("profile-height").value);
+      if (!age || !weight || !height) return;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      await saveBodyProfile({ age, weight, height });
+      submitBtn.disabled = false;
+      document.getElementById("profile-setup-screen").hidden = true;
+      document.getElementById("app-screen").hidden = false;
+      renderRoute();
+      refreshAll();
+    });
+  }
 
   // ---- Storage helpers (namespaced per signed-in user) ----
   function storageKey(base) { return `ownday:${currentUser.id}:${base}`; }
@@ -1743,19 +1800,41 @@
   };
 
   function generatePlan(profile) {
-    const { weight, height, age, goalDirection, goalAmount, muscleGoal } = profile;
+    const { weight, height, age, goalDirection, goalAmount, muscleGoal, durationMonths } = profile;
     const bmr = 10 * weight + 6.25 * height - 5 * age - 78;
     const tdee = bmr * ACTIVITY_FACTOR[muscleGoal];
-    const dailyAdjustment = CALORIE_ADJUSTMENT[goalDirection][muscleGoal];
-    const calorieTarget = Math.round(goalDirection === "lose" ? tdee - dailyAdjustment : tdee + dailyAdjustment);
+
+    // Spread the total calorie change needed across the timeline the person chose.
+    const totalKcalChange = goalAmount * 7700;
+    const totalDays = Math.max(1, Math.round((durationMonths || 1) * 30.4));
+    let dailyAdjustment = Math.round(totalKcalChange / totalDays);
+
+    // Safety clamp — keep the daily deficit/surplus in a healthy range even if the
+    // chosen timeline was very aggressive, and note when that happens.
+    const SAFE_MAX_ADJUSTMENT = 1000;
+    const SAFE_MIN_ADJUSTMENT = 50;
+    const clamped = dailyAdjustment > SAFE_MAX_ADJUSTMENT;
+    dailyAdjustment = Math.min(SAFE_MAX_ADJUSTMENT, Math.max(SAFE_MIN_ADJUSTMENT, dailyAdjustment));
+
+    let calorieTarget = Math.round(goalDirection === "lose" ? tdee - dailyAdjustment : tdee + dailyAdjustment);
+    const MIN_CALORIES = 1200;
+    if (goalDirection === "lose" && calorieTarget < MIN_CALORIES) calorieTarget = MIN_CALORIES;
+
     const proteinTarget = Math.round(weight * PROTEIN_FACTOR[muscleGoal]);
-    const weeklyRateKg = (dailyAdjustment * 7) / 7700;
-    const estWeeks = weeklyRateKg > 0 ? Math.max(1, Math.round(goalAmount / weeklyRateKg)) : null;
-    return { calorieTarget, proteinTarget, dailyAdjustment, weeklyRateKg, estWeeks };
+    const actualDays = dailyAdjustment > 0 ? Math.round(totalKcalChange / dailyAdjustment) : null;
+    const estWeeks = actualDays ? Math.max(1, Math.round(actualDays / 7)) : null;
+    return { calorieTarget, proteinTarget, dailyAdjustment, durationMonths, estWeeks, clamped };
   }
 
   function buildFoodTips(profile, plan) {
     const tips = [];
+    const mealSplit = [
+      ["Breakfast", 0.25],
+      ["Lunch", 0.35],
+      ["Dinner", 0.30],
+      ["Snacks", 0.10],
+    ].map(([name, pct]) => `${name} ~${Math.round(plan.calorieTarget * pct)} kcal`).join(" · ");
+    tips.push(`Rough daily split: ${mealSplit}.`);
     tips.push(`Aim for ~${plan.proteinTarget}g protein/day — lean meats, eggs, Greek yogurt, tofu, legumes.`);
     tips.push("Carbs fuel your training — whole grains, fruit, potatoes, oats.");
     tips.push("Healthy fats in moderation — nuts, olive oil, avocado.");
@@ -1777,13 +1856,22 @@
     });
   }
 
+  function updateBodyStatsLine() {
+    const el = document.getElementById("ob-body-stats-line");
+    if (!el) return;
+    if (hasCompleteBodyProfile(bodyProfile)) {
+      el.textContent = `${bodyProfile.age} years old · ${bodyProfile.weight_kg} kg · ${bodyProfile.height_cm} cm`;
+    } else {
+      el.textContent = "—";
+    }
+  }
+
   function prefillOnboardingForm(profile) {
+    updateBodyStatsLine();
     if (!profile) return;
-    document.getElementById("ob-weight").value = profile.weight;
-    document.getElementById("ob-height").value = profile.height;
-    document.getElementById("ob-age").value = profile.age;
     document.getElementById("ob-direction").value = profile.goalDirection;
     document.getElementById("ob-amount").value = profile.goalAmount;
+    document.getElementById("ob-duration").value = profile.durationMonths;
     const radio = document.querySelector(`input[name="ob-muscle"][value="${profile.muscleGoal}"]`);
     if (radio) radio.checked = true;
     updateMuscleCardStyles();
@@ -1798,11 +1886,9 @@
       const muscleInput = document.querySelector('input[name="ob-muscle"]:checked');
       if (!muscleInput) return;
       const profile = {
-        weight: parseFloat(document.getElementById("ob-weight").value),
-        height: parseFloat(document.getElementById("ob-height").value),
-        age: parseInt(document.getElementById("ob-age").value, 10),
         goalDirection: document.getElementById("ob-direction").value,
         goalAmount: parseFloat(document.getElementById("ob-amount").value),
+        durationMonths: parseFloat(document.getElementById("ob-duration").value),
         muscleGoal: muscleInput.value,
         onboardedAt: getProfile()?.onboardedAt || new Date().toISOString(),
       };
@@ -1816,14 +1902,26 @@
       refreshAll();
       prefillOnboardingForm(getProfile());
     });
+
+    document.getElementById("ob-edit-body-link").addEventListener("click", (e) => {
+      e.preventDefault();
+      prefillProfileSetupForm(bodyProfile);
+      document.getElementById("app-screen").hidden = true;
+      document.getElementById("profile-setup-screen").hidden = false;
+    });
   }
 
   // ---- Fitness dashboard rendering ----
   function renderPlanPanel(profile, plan) {
     const goalWord = profile.goalDirection === "lose" ? "Lose" : "Gain";
-    const weeksText = plan.estWeeks ? ` — about ${plan.estWeeks} week${plan.estWeeks === 1 ? "" : "s"} at a steady pace` : "";
+    let paceNote;
+    if (plan.clamped) {
+      paceNote = ` — your ${plan.durationMonths}-month timeline was a bit aggressive, so we capped it at a safer ${plan.dailyAdjustment} kcal/day (about ${plan.estWeeks} week${plan.estWeeks === 1 ? "" : "s"} realistically)`;
+    } else {
+      paceNote = ` over about ${plan.durationMonths} month${plan.durationMonths === 1 ? "" : "s"}`;
+    }
     document.getElementById("plan-goal-line").textContent =
-      `Goal: ${goalWord} ${profile.goalAmount} kg with ${MUSCLE_LABEL[profile.muscleGoal]}${weeksText}.`;
+      `Goal: ${goalWord} ${profile.goalAmount} kg with ${MUSCLE_LABEL[profile.muscleGoal]}${paceNote}.`;
     document.getElementById("plan-calories").textContent = plan.calorieTarget.toLocaleString();
     document.getElementById("plan-protein").textContent = `Protein target: ${plan.proteinTarget} g/day`;
 
@@ -2132,6 +2230,16 @@
     });
   }
 
+  function withBodyStats(profile) {
+    if (!profile || !hasCompleteBodyProfile(bodyProfile)) return null;
+    return {
+      ...profile,
+      weight: bodyProfile.weight_kg,
+      height: bodyProfile.height_cm,
+      age: bodyProfile.age,
+    };
+  }
+
   function renderFitnessSection() {
     const profile = getProfile();
     const onboardingView = document.getElementById("onboarding-view");
@@ -2141,12 +2249,14 @@
       onboardingView.hidden = false;
       dash.hidden = true;
       if (profile) prefillOnboardingForm(profile);
+      else updateBodyStatsLine();
       return;
     }
 
     onboardingView.hidden = true;
     dash.hidden = false;
-    const plan = generatePlan(profile);
+    const fullProfile = withBodyStats(profile);
+    const plan = generatePlan(fullProfile);
     renderPlanPanel(profile, plan);
     renderTodayStrip(profile, plan);
     renderFoodList();
@@ -2156,7 +2266,8 @@
   function refreshHomeFitnessTile() {
     const body = document.getElementById("home-fitness-body");
     const profile = getProfile();
-    if (!profile) {
+    const fullProfile = withBodyStats(profile);
+    if (!fullProfile) {
       body.innerHTML = `
         <div class="stat-row">
           <div class="stat-text">
@@ -2169,7 +2280,7 @@
       setRingProgress("home-fitness-ring", 0);
       return;
     }
-    const plan = generatePlan(profile);
+    const plan = generatePlan(fullProfile);
     const today = todayISO();
     const todayCals = getFood().filter((f) => f.date === today).reduce((s, f) => s + f.calories, 0);
     const pct = plan.calorieTarget > 0 ? Math.min(100, Math.round((todayCals / plan.calorieTarget) * 100)) : 0;
@@ -2253,7 +2364,6 @@
   }
 
   function prefillSleepOnboardingForm(profile) {
-    document.getElementById("sleep-ob-age").value = profile.age;
     document.getElementById("sleep-ob-target").value = profile.target_hours;
     document.getElementById("sleep-ob-wake").value = profile.wake_time.slice(0, 5);
   }
@@ -2261,7 +2371,7 @@
   function initSleepOnboardingForm() {
     document.getElementById("sleep-onboarding-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const age = parseInt(document.getElementById("sleep-ob-age").value, 10);
+      const age = bodyProfile ? bodyProfile.age : null;
       const targetHours = parseFloat(document.getElementById("sleep-ob-target").value);
       const wakeTime = document.getElementById("sleep-ob-wake").value;
       if (!age || !targetHours || !wakeTime) return;
@@ -3335,8 +3445,19 @@
     const greeting = getTimeGreeting();
     document.getElementById("home-greeting").textContent = `${greeting.text}, ${firstName} ${greeting.emoji}`;
     document.getElementById("user-avatar").textContent = firstName.charAt(0).toUpperCase();
+
+    bodyProfile = await fetchBodyProfile();
     document.getElementById("loading-screen").hidden = true;
     document.getElementById("auth-screen").hidden = true;
+
+    if (!hasCompleteBodyProfile(bodyProfile)) {
+      prefillProfileSetupForm(bodyProfile);
+      document.getElementById("app-screen").hidden = true;
+      document.getElementById("profile-setup-screen").hidden = false;
+      return;
+    }
+
+    document.getElementById("profile-setup-screen").hidden = true;
     document.getElementById("app-screen").hidden = false;
     renderRoute();
     refreshAll();
@@ -3389,7 +3510,9 @@
     sb.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         currentUser = null;
+        bodyProfile = null;
         document.getElementById("app-screen").hidden = true;
+        document.getElementById("profile-setup-screen").hidden = true;
         document.getElementById("auth-screen").hidden = false;
         showAuthForm("signin");
         location.hash = "#/";
@@ -3399,6 +3522,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initAuthForms();
+    initProfileSetupForm();
     initOnboardingForm();
     initSplitToggle();
     initFoodForm();
