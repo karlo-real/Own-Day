@@ -177,6 +177,28 @@
 
   .accent-food { --accent: var(--accent-food); --on-accent: #2a2118; }
 
+  .calories-loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 72px 20px;
+  }
+
+  .loading-spinner {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent-food);
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
   /* ---- Page ---- */
   main.container { padding-top: 40px; padding-bottom: 64px; }
 
@@ -1509,71 +1531,78 @@
     </div>
 
     <div id="calories-dashboard" hidden>
-      <div class="tile-grid" style="margin-bottom: 24px;">
-        <div class="tile accent-food">
-          <div class="tile-header">🍎 Calories today</div>
-          <div class="tile-body">
-            <div class="stat-row">
-              <div class="stat-text">
-                <p class="tile-number display"><span id="cal-today-total">0</span><span style="font-size:16px; font-family:'Manrope',sans-serif; font-weight:700; letter-spacing:0;"> / <span id="cal-today-target">0</span> kcal</span></p>
-                <p class="tile-sub muted" id="cal-today-compare">Yesterday: 0 kcal</p>
+      <div id="calories-loading-screen" class="calories-loading-screen" hidden>
+        <div class="loading-spinner"></div>
+        <p class="plan-caption">Building your plan…</p>
+      </div>
+
+      <div id="calories-content">
+        <div class="tile-grid" style="margin-bottom: 24px;">
+          <div class="tile accent-food">
+            <div class="tile-header">🍎 Calories today</div>
+            <div class="tile-body">
+              <div class="stat-row">
+                <div class="stat-text">
+                  <p class="tile-number display"><span id="cal-today-total">0</span><span style="font-size:16px; font-family:'Manrope',sans-serif; font-weight:700; letter-spacing:0;"> / <span id="cal-today-target">0</span> kcal</span></p>
+                  <p class="tile-sub muted" id="cal-today-compare">Yesterday: 0 kcal</p>
+                </div>
+                <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="cal-today-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="cal-today-ring-label">0%</span></div>
               </div>
-              <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="cal-today-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="cal-today-ring-label">0%</span></div>
             </div>
           </div>
         </div>
+
+        <section class="panel accent-food">
+          <div class="panel-header">
+            <span>Your eating plan</span>
+            <button type="button" class="btn-ghost" id="cal-edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
+          </div>
+          <div class="panel-body">
+            <p class="plan-caption" id="cal-goal-line">Goal: —</p>
+            <p class="plan-headline display"><span id="cal-plan-calories">0</span> kcal/day</p>
+            <p class="plan-caption" id="cal-plan-protein">Protein target: 0 g/day</p>
+          </div>
+        </section>
+
+        <section class="panel accent-food">
+          <div class="panel-header">Your AI meal plan</div>
+          <div class="panel-body">
+            <p class="plan-caption" id="cal-ai-loading" hidden>Cooking up your plan… 🍳</p>
+            <p class="plan-caption" id="cal-ai-error" hidden style="color:#c0392b;"></p>
+            <div id="cal-ai-plan"></div>
+            <button type="button" class="btn-ghost" id="cal-regenerate-btn" style="margin-top:12px;">Regenerate plan 🔄</button>
+          </div>
+        </section>
+
+        <section class="panel accent-food">
+          <div class="panel-header">Log today's food</div>
+          <div class="panel-body">
+            <form id="food-form" class="food-form">
+              <div class="field field-wide">
+                <label for="food-name">Food / meal</label>
+                <input type="text" id="food-name" placeholder="e.g. Chicken &amp; rice bowl" required>
+              </div>
+              <div class="field">
+                <label for="food-calories">Calories</label>
+                <input type="number" id="food-calories" min="1" step="1" placeholder="450" required>
+              </div>
+              <div class="field">
+                <label for="food-date">Date</label>
+                <input type="date" id="food-date" required>
+              </div>
+              <button type="submit" class="btn-submit">Add</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel accent-food">
+          <div class="panel-header">Food log</div>
+          <div class="panel-body">
+            <ul class="entry-list" id="food-list"></ul>
+            <p class="empty-state" id="food-empty" hidden>Nothing logged yet — add your first meal above!</p>
+          </div>
+        </section>
       </div>
-
-      <section class="panel accent-food">
-        <div class="panel-header">
-          <span>Your eating plan</span>
-          <button type="button" class="btn-ghost" id="cal-edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
-        </div>
-        <div class="panel-body">
-          <p class="plan-caption" id="cal-goal-line">Goal: —</p>
-          <p class="plan-headline display"><span id="cal-plan-calories">0</span> kcal/day</p>
-          <p class="plan-caption" id="cal-plan-protein">Protein target: 0 g/day</p>
-        </div>
-      </section>
-
-      <section class="panel accent-food">
-        <div class="panel-header">Your AI meal plan</div>
-        <div class="panel-body">
-          <p class="plan-caption" id="cal-ai-loading" hidden>Cooking up your plan… 🍳</p>
-          <p class="plan-caption" id="cal-ai-error" hidden style="color:#c0392b;"></p>
-          <div id="cal-ai-plan"></div>
-          <button type="button" class="btn-ghost" id="cal-regenerate-btn" style="margin-top:12px;">Regenerate plan 🔄</button>
-        </div>
-      </section>
-
-      <section class="panel accent-food">
-        <div class="panel-header">Log today's food</div>
-        <div class="panel-body">
-          <form id="food-form" class="food-form">
-            <div class="field field-wide">
-              <label for="food-name">Food / meal</label>
-              <input type="text" id="food-name" placeholder="e.g. Chicken &amp; rice bowl" required>
-            </div>
-            <div class="field">
-              <label for="food-calories">Calories</label>
-              <input type="number" id="food-calories" min="1" step="1" placeholder="450" required>
-            </div>
-            <div class="field">
-              <label for="food-date">Date</label>
-              <input type="date" id="food-date" required>
-            </div>
-            <button type="submit" class="btn-submit">Add</button>
-          </form>
-        </div>
-      </section>
-
-      <section class="panel accent-food">
-        <div class="panel-header">Food log</div>
-        <div class="panel-body">
-          <ul class="entry-list" id="food-list"></ul>
-          <p class="empty-state" id="food-empty" hidden>Nothing logged yet — add your first meal above!</p>
-        </div>
-      </section>
     </div>
   </section>
 
@@ -2233,8 +2262,31 @@
 
   // ---- Calories (Supabase-backed, Gemini AI eating plan) ----
   let editingCalorieProfile = false;
+  let calorieSectionEntering = false;
   const CALORIE_ACTIVITY_FACTOR = 1.4; // general moderately-active default
   const CALORIE_PROTEIN_FACTOR = { lose: 1.8, gain: 2.0 };
+
+  // Shows the Calories loading screen while `promise` runs, keeping it up for at
+  // least `minMs` so it doesn't just flicker even when the work finishes instantly.
+  async function showCaloriesLoadingFor(promise, minMs = 3000) {
+    const loadingScreen = document.getElementById("calories-loading-screen");
+    const content = document.getElementById("calories-content");
+    if (!loadingScreen || !content) {
+      await promise;
+      return;
+    }
+    loadingScreen.hidden = false;
+    content.hidden = true;
+    const start = Date.now();
+    try {
+      await promise;
+    } finally {
+      const elapsed = Date.now() - start;
+      if (elapsed < minMs) await new Promise((r) => setTimeout(r, minMs - elapsed));
+      loadingScreen.hidden = true;
+      content.hidden = false;
+    }
+  }
 
   function generateCalorieTargets(profile) {
     const { weight, height, age, goalDirection, goalAmount, durationMonths } = profile;
@@ -2408,9 +2460,9 @@
         ai_plan: null,
       });
       editingCalorieProfile = false;
+      calorieSectionEntering = true;
       submitBtn.disabled = false;
       await refreshAll();
-      generateAiEatingPlan();
     });
 
     document.getElementById("cal-edit-plan-btn").addEventListener("click", async () => {
@@ -2427,10 +2479,12 @@
       document.getElementById("profile-setup-screen").hidden = false;
     });
 
-    document.getElementById("cal-regenerate-btn").addEventListener("click", () => generateAiEatingPlan());
+    document.getElementById("cal-regenerate-btn").addEventListener("click", () => {
+      renderCaloriesSection({ forceRegenerate: true });
+    });
   }
 
-  async function renderCaloriesSection() {
+  async function renderCaloriesSection(opts = {}) {
     const onboardingView = document.getElementById("calories-onboarding-view");
     const dash = document.getElementById("calories-dashboard");
     if (!onboardingView || !dash) return;
@@ -2472,9 +2526,19 @@
     document.getElementById("cal-today-compare").textContent = `Yesterday: ${yesterdayCals.toLocaleString()} kcal`;
 
     renderAiPlan(row.ai_plan);
-    if (!row.ai_plan) generateAiEatingPlan();
-
     renderFoodList();
+
+    const needsFreshPlan = opts.forceRegenerate || !row.ai_plan;
+    if (calorieSectionEntering || opts.forceRegenerate) {
+      calorieSectionEntering = false;
+      if (needsFreshPlan) {
+        await showCaloriesLoadingFor(generateAiEatingPlan(), 3000);
+      } else {
+        await showCaloriesLoadingFor(Promise.resolve(), 3000);
+      }
+    } else if (needsFreshPlan) {
+      generateAiEatingPlan();
+    }
   }
 
   async function refreshHomeCaloriesTile() {
@@ -3472,6 +3536,7 @@
   // ---- Routing ----
   const ROUTES = ["home", "fitness", "calories", "sleep", "study", "friends", "admin"];
   let pendingAddFriendId = null;
+  let previousRoute = null;
 
   function currentRoute() {
     const h = location.hash.replace(/^#\/?/, "") || "home";
@@ -3490,6 +3555,10 @@
 
   function renderRoute() {
     const route = currentRoute();
+    if (route === "calories" && previousRoute !== "calories") {
+      calorieSectionEntering = true;
+    }
+    previousRoute = route;
     const sections = Array.from(document.querySelectorAll("[data-view]"));
     const current = sections.find((el) => !el.hidden);
 
