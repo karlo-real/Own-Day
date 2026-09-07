@@ -1015,6 +1015,99 @@
 
   .flashcard.flipped .flashcard-front { display: none; }
   .flashcard.flipped .flashcard-back { display: flex; }
+
+  /* ---- Trend charts (7-day mini bar charts) ---- */
+  .trend-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    height: 96px;
+    padding-top: 8px;
+  }
+  .trend-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    height: 100%;
+  }
+  .trend-bar-track {
+    flex: 1;
+    width: 100%;
+    max-width: 28px;
+    display: flex;
+    align-items: flex-end;
+    background: var(--surface-2);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .trend-bar {
+    width: 100%;
+    border-radius: 8px;
+    background: var(--ink-faint);
+    transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    min-height: 4px;
+  }
+  .trend-bar-hit { background: var(--accent); }
+  .trend-bar-partial { background: color-mix(in srgb, var(--accent) 55%, var(--ink-faint)); }
+  .trend-bar-miss { background: var(--border); }
+  .trend-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  /* ---- Achievement badges ---- */
+  .badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 12px;
+  }
+  .badge-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    border-radius: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    text-align: center;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .badge-emoji {
+    font-size: 26px;
+    line-height: 1;
+    filter: grayscale(100%);
+    opacity: 0.35;
+  }
+  .badge-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ink-faint);
+    letter-spacing: 0.01em;
+  }
+  .badge-chip.unlocked {
+    background: var(--surface);
+    border-color: var(--accent);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .badge-chip.unlocked .badge-emoji { filter: none; opacity: 1; }
+  .badge-chip.unlocked .badge-title { color: var(--ink); }
+  .badge-chip.just-unlocked { animation: badgePop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes badgePop {
+    0% { transform: scale(0.7); }
+    60% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .badge-chip.just-unlocked { animation: none; }
+    .trend-bar { transition: none; }
+  }
 </style>
 </head>
 <body>
@@ -1211,6 +1304,13 @@
         </div>
       </a>
     </div>
+
+    <section class="panel" id="badges-panel" style="margin-top:24px;">
+      <div class="panel-header">Achievements</div>
+      <div class="panel-body">
+        <div class="badges-grid" id="badges-grid"></div>
+      </div>
+    </section>
   </section>
 
   <section data-view="sleep" hidden>
@@ -1253,6 +1353,13 @@
           </div>
         </div>
       </div>
+
+      <section class="panel">
+        <div class="panel-header">Last 7 days</div>
+        <div class="panel-body">
+          <div id="sleep-trend-chart"></div>
+        </div>
+      </section>
 
       <section class="panel">
         <div class="panel-header">
@@ -1327,6 +1434,13 @@
           </div>
         </div>
       </div>
+
+      <section class="panel">
+        <div class="panel-header">Last 7 days</div>
+        <div class="panel-body">
+          <div id="study-trend-chart"></div>
+        </div>
+      </section>
 
       <section class="panel">
         <div class="panel-header">
@@ -1463,6 +1577,13 @@
       </div>
 
       <section class="panel">
+        <div class="panel-header">Last 7 days</div>
+        <div class="panel-body">
+          <div id="fitness-trend-chart"></div>
+        </div>
+      </section>
+
+      <section class="panel">
         <div class="panel-header">
           <span>Your workout plan</span>
           <button type="button" class="btn-ghost" id="edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
@@ -1578,6 +1699,13 @@
             </div>
           </div>
         </div>
+
+        <section class="panel accent-food">
+          <div class="panel-header">Last 7 days</div>
+          <div class="panel-body">
+            <div id="calories-trend-chart"></div>
+          </div>
+        </section>
 
         <section class="panel accent-food">
           <div class="panel-header">
@@ -1977,6 +2105,31 @@
     return `<div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="${RING_R}"></circle><circle class="ring-fill" id="${id}" cx="32" cy="32" r="${RING_R}" stroke-dasharray="${RING_C.toFixed(2)}" stroke-dashoffset="${RING_C.toFixed(2)}"></circle></svg><span class="ring-label" id="${id}-label">0%</span></div>`;
   }
 
+  // Smoothly tweens the text content of `el` from its current numeric value to `to`.
+  // Respects prefers-reduced-motion by snapping instantly.
+  function animateNumber(el, to, opts = {}) {
+    if (!el) return;
+    const { duration = 700, suffix = "", decimals = 0 } = opts;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.textContent = to.toFixed(decimals) + suffix;
+      return;
+    }
+    const from = parseFloat(el.textContent) || 0;
+    if (from === to) {
+      el.textContent = to.toFixed(decimals) + suffix;
+      return;
+    }
+    const start = performance.now();
+    function tick(now) {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = from + (to - from) * eased;
+      el.textContent = val.toFixed(decimals) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   function setRingProgress(id, pct) {
     const circle = document.getElementById(id);
     const label = document.getElementById(id + "-label");
@@ -1985,9 +2138,190 @@
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         circle.style.strokeDashoffset = (RING_C * (1 - clamped / 100)).toFixed(2);
-        if (label) label.textContent = clamped + "%";
+        if (label) animateNumber(label, clamped, { suffix: "%" });
       });
     });
+  }
+
+  // ---- 7-day trend charts ----
+  function last7Dates() {
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      dates.push(toISO(d));
+    }
+    return dates;
+  }
+
+  function trendDayLabels(dates) {
+    return dates.map((d) => parseLocalDate(d).toLocaleDateString(undefined, { weekday: "narrow" }));
+  }
+
+  function renderTrendChart(containerId, values, opts = {}) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const { labels, maxValue, formatValue, barClassFn } = opts;
+    const max = maxValue && maxValue > 0 ? maxValue : Math.max(1, ...values);
+    el.innerHTML = `<div class="trend-chart">${values.map((v, i) => {
+      const pct = v > 0 ? Math.max(6, Math.round((v / max) * 100)) : 2;
+      const cls = barClassFn ? barClassFn(v, i) : "";
+      const title = formatValue ? formatValue(v, i) : String(v);
+      return `<div class="trend-col">
+        <div class="trend-bar-track"><div class="trend-bar ${cls}" style="height:${Math.min(100, pct)}%" title="${escapeHtml(title)}"></div></div>
+        <span class="trend-label">${labels[i]}</span>
+      </div>`;
+    }).join("")}</div>`;
+  }
+
+  function renderFitnessTrend() {
+    const dates = last7Dates();
+    const labels = trendDayLabels(dates);
+    const workouts = getWorkouts();
+    const values = dates.map((d) => (workouts.some((w) => w.date === d) ? 1 : 0));
+    renderTrendChart("fitness-trend-chart", values, {
+      labels,
+      maxValue: 1,
+      formatValue: (v, i) => (v ? "Workout logged" : "Rest day"),
+      barClassFn: (v) => (v ? "trend-bar-hit" : "trend-bar-miss"),
+    });
+  }
+
+  function renderCaloriesTrend(targetCalories) {
+    const dates = last7Dates();
+    const labels = trendDayLabels(dates);
+    const food = getFood();
+    const values = dates.map((d) => food.filter((f) => f.date === d).reduce((s, f) => s + f.calories, 0));
+    renderTrendChart("calories-trend-chart", values, {
+      labels,
+      maxValue: Math.max(targetCalories || 0, ...values, 1),
+      formatValue: (v, i) => `${v.toLocaleString()} kcal`,
+      barClassFn: (v) => {
+        if (!v) return "trend-bar-miss";
+        if (targetCalories && v >= targetCalories * 0.85 && v <= targetCalories * 1.15) return "trend-bar-hit";
+        return "trend-bar-partial";
+      },
+    });
+  }
+
+  async function renderSleepTrend(targetHours) {
+    const dates = last7Dates();
+    const labels = trendDayLabels(dates);
+    let logs = [];
+    try { logs = await getSleepLogs(); } catch (e) {}
+    const values = dates.map((d) => {
+      const l = logs.find((x) => x.date === d);
+      return l ? l.hours : 0;
+    });
+    renderTrendChart("sleep-trend-chart", values, {
+      labels,
+      maxValue: Math.max(targetHours || 0, ...values, 1),
+      formatValue: (v, i) => (v ? `${v}h slept` : "No log"),
+      barClassFn: (v) => {
+        if (!v) return "trend-bar-miss";
+        if (targetHours && v >= targetHours * 0.9) return "trend-bar-hit";
+        return "trend-bar-partial";
+      },
+    });
+  }
+
+  async function renderStudyTrend() {
+    const dates = last7Dates();
+    const labels = trendDayLabels(dates);
+    let allDates = [];
+    if (currentUser) {
+      try {
+        const { data: notes } = await sb.from("study_notes").select("created_at").eq("user_id", currentUser.id);
+        allDates = allDates.concat((notes || []).map((n) => n.created_at.slice(0, 10)));
+        const { data: quizzes } = await sb.from("study_quizzes").select("completed_at").eq("user_id", currentUser.id).not("completed_at", "is", null);
+        allDates = allDates.concat((quizzes || []).map((q) => q.completed_at.slice(0, 10)));
+      } catch (e) {}
+    }
+    const values = dates.map((d) => allDates.filter((x) => x === d).length);
+    renderTrendChart("study-trend-chart", values, {
+      labels,
+      maxValue: Math.max(1, ...values),
+      formatValue: (v, i) => (v ? `${v} study action${v === 1 ? "" : "s"}` : "Nothing logged"),
+      barClassFn: (v) => (v ? "trend-bar-hit" : "trend-bar-miss"),
+    });
+  }
+
+  // ---- Achievement badges ----
+  const BADGES = [
+    { id: "first-workout", emoji: "🏋️", title: "First Rep", desc: "Log your first workout" },
+    { id: "first-meal", emoji: "🍎", title: "First Bite", desc: "Log your first meal" },
+    { id: "first-sleep", emoji: "🌙", title: "Well Rested", desc: "Log your first night of sleep" },
+    { id: "first-study", emoji: "📚", title: "Bookworm", desc: "Upload notes or finish a quiz" },
+    { id: "first-friend", emoji: "🤝", title: "Not Alone", desc: "Add your first friend" },
+    { id: "streak-3", emoji: "🔥", title: "Warming Up", desc: "Reach a 3-day streak" },
+    { id: "streak-7", emoji: "⚡", title: "One Week Strong", desc: "Reach a 7-day streak" },
+    { id: "streak-30", emoji: "👑", title: "Unstoppable", desc: "Reach a 30-day streak" },
+    { id: "perfect-day", emoji: "🎯", title: "Perfect Day", desc: "Complete every goal in one day" },
+    { id: "workout-10", emoji: "💪", title: "Iron Habit", desc: "Log 10 total workouts" },
+  ];
+
+  async function checkBadges() {
+    if (!currentUser) return;
+    const ctx = { streak: await computeStreak() };
+    ctx.workoutCount = getWorkouts().length;
+    ctx.foodCount = getFood().length;
+    try { ctx.sleepCount = (await getSleepLogs()).length; } catch (e) { ctx.sleepCount = 0; }
+    try {
+      const { data: notes } = await sb.from("study_notes").select("id").eq("user_id", currentUser.id);
+      const { data: quizzes } = await sb.from("study_quizzes").select("id").eq("user_id", currentUser.id).not("completed_at", "is", null);
+      ctx.studyCount = (notes || []).length + (quizzes || []).length;
+    } catch (e) { ctx.studyCount = 0; }
+    try {
+      const { data: rows } = await sb.from("friend_requests").select("id").eq("status", "accepted")
+        .or(`requester_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`);
+      ctx.friendCount = (rows || []).length;
+    } catch (e) { ctx.friendCount = 0; }
+    const perfectKey = `ownday:${currentUser.id}:perfectDayDates`;
+    ctx.perfectDays = JSON.parse(localStorage.getItem(perfectKey) || "[]").length;
+
+    const earnedMap = {
+      "first-workout": ctx.workoutCount >= 1,
+      "first-meal": ctx.foodCount >= 1,
+      "first-sleep": ctx.sleepCount >= 1,
+      "first-study": ctx.studyCount >= 1,
+      "first-friend": ctx.friendCount >= 1,
+      "streak-3": ctx.streak >= 3,
+      "streak-7": ctx.streak >= 7,
+      "streak-30": ctx.streak >= 30,
+      "perfect-day": ctx.perfectDays >= 1,
+      "workout-10": ctx.workoutCount >= 10,
+    };
+
+    const storeKey = `ownday:${currentUser.id}:earnedBadges`;
+    const storedRaw = localStorage.getItem(storeKey);
+    const isFirstRunEver = storedRaw === null; // don't celebrate a flood of badges earned before this feature existed
+    const prevEarned = new Set(JSON.parse(storedRaw || "[]"));
+    const nowEarned = new Set(Object.keys(earnedMap).filter((id) => earnedMap[id]));
+    const newlyUnlocked = [...nowEarned].filter((id) => !prevEarned.has(id));
+
+    localStorage.setItem(storeKey, JSON.stringify([...nowEarned]));
+    renderBadgesPanel(nowEarned, isFirstRunEver ? [] : newlyUnlocked);
+
+    if (!isFirstRunEver && newlyUnlocked.length) {
+      newlyUnlocked.forEach((id) => {
+        const badge = BADGES.find((b) => b.id === id);
+        if (badge) showToast(`${badge.emoji} Badge unlocked: ${badge.title}!`);
+      });
+      maybeConfetti(document.getElementById("badges-panel"));
+    }
+  }
+
+  function renderBadgesPanel(earnedSet, newlyUnlocked = []) {
+    const el = document.getElementById("badges-grid");
+    if (!el) return;
+    el.innerHTML = BADGES.map((b) => {
+      const unlocked = earnedSet.has(b.id);
+      const justUnlocked = newlyUnlocked.includes(b.id);
+      return `<div class="badge-chip ${unlocked ? "unlocked" : "locked"} ${justUnlocked ? "just-unlocked" : ""}" title="${escapeHtml(b.desc)}">
+        <span class="badge-emoji">${b.emoji}</span>
+        <span class="badge-title">${escapeHtml(b.title)}</span>
+      </div>`;
+    }).join("");
   }
 
   // ---- Skeleton loading ----
@@ -2092,6 +2426,13 @@
       didSleep = logs.some((l) => l.date === yesterday);
     } catch (e) {}
     if (!(didWorkout && didFood && didSleep)) return;
+
+    const perfectKey = `ownday:${currentUser.id}:perfectDayDates`;
+    const perfectDays = JSON.parse(localStorage.getItem(perfectKey) || "[]");
+    if (!perfectDays.includes(today)) {
+      perfectDays.push(today);
+      localStorage.setItem(perfectKey, JSON.stringify(perfectDays));
+    }
 
     const key = `ownday:${currentUser.id}:goalsCelebratedDate`;
     if (localStorage.getItem(key) === today) return;
@@ -2254,6 +2595,7 @@
     renderWorkoutPlanPanel(profile);
     renderTodayWorkoutStrip();
     renderWorkoutList();
+    renderFitnessTrend();
   }
 
   function refreshHomeFitnessTile() {
@@ -2554,6 +2896,7 @@
 
     renderAiPlan(row.ai_plan);
     renderFoodList();
+    renderCaloriesTrend(targets.calorieTarget);
 
     const needsFreshPlan = opts.forceRegenerate || !row.ai_plan;
     if (calorieSectionEntering || opts.forceRegenerate) {
@@ -2797,6 +3140,7 @@
     renderSleepPlanPanel(profile, plan);
     await renderSleepToday(profile);
     await renderSleepLogList();
+    await renderSleepTrend(profile.target_hours);
   }
 
   async function refreshHomeSleepTile() {
@@ -2874,7 +3218,7 @@
     const badge = document.getElementById("streak-badge");
     if (!el || !badge) return;
     const streak = await computeStreak();
-    el.textContent = streak;
+    animateNumber(el, streak, { duration: 900 });
 
     badge.classList.remove("tier-1", "tier-2", "tier-3", "tier-4");
     if (streak >= 14) badge.classList.add("tier-4");
@@ -2911,6 +3255,7 @@
     renderHomeStreak();
     syncActivitySummary();
     checkDailyGoalsCelebration();
+    checkBadges();
   }
 
   // ---- Friends ----
@@ -3558,6 +3903,7 @@
     await renderFlashcards();
     renderSchedule(currentStudyTest.schedule);
     await renderPastQuizzes();
+    await renderStudyTrend();
   }
 
   // ---- Routing ----
