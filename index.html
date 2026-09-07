@@ -49,18 +49,32 @@
     pointer-events: none;
   }
 
+  /* Blobs are a very faint mix of every section's color, shown only on the Home
+     page (kept plain white/cream everywhere else — see body[data-route]). */
   .bg-blob {
     position: absolute;
     border-radius: 50%;
     filter: blur(90px);
     background: var(--surface);
-    opacity: 0.22;
+    opacity: 0;
     transition: opacity 0.4s ease;
   }
 
   .bg-blob-1 { width: 480px; height: 480px; top: -140px; left: -120px; }
   .bg-blob-2 { width: 520px; height: 520px; bottom: -180px; right: -140px; }
-  .bg-blob-3 { width: 360px; height: 360px; top: 38%; left: 55%; opacity: 0.14; }
+  .bg-blob-3 { width: 360px; height: 360px; top: 38%; left: 55%; }
+  .bg-blob-4 { width: 340px; height: 340px; top: -80px; right: 10%; }
+  .bg-blob-5 { width: 300px; height: 300px; bottom: -60px; left: 12%; }
+  .bg-blob-6 { width: 260px; height: 260px; top: 55%; left: -80px; }
+  .bg-blob-7 { width: 240px; height: 240px; bottom: 30%; right: -60px; }
+
+  body[data-route="home"] .bg-blob-1 { background: var(--accent-home); opacity: 0.16; }
+  body[data-route="home"] .bg-blob-2 { background: var(--accent-sleep); opacity: 0.14; }
+  body[data-route="home"] .bg-blob-3 { background: var(--accent-friends); opacity: 0.10; }
+  body[data-route="home"] .bg-blob-4 { background: var(--accent-workout); opacity: 0.10; }
+  body[data-route="home"] .bg-blob-5 { background: var(--accent-food); opacity: 0.10; }
+  body[data-route="home"] .bg-blob-6 { background: var(--accent-study); opacity: 0.09; }
+  body[data-route="home"] .bg-blob-7 { background: var(--accent-admin); opacity: 0.09; }
 
   @media (prefers-reduced-motion: no-preference) {
     .streak-flame { animation: flicker 2.6s ease-in-out infinite; }
@@ -217,6 +231,10 @@
     font-size: 15px;
     max-width: 46ch;
   }
+
+  /* Home keeps its original look: colorful title, plain muted subtitle, on a white page. */
+  section[data-view="home"] .page-title { color: var(--accent-home); }
+  section[data-view="home"] .page-subtitle { color: var(--ink-dim); opacity: 1; }
 
   .section-row {
     display: flex;
@@ -1006,6 +1024,10 @@
   <div class="bg-blob bg-blob-1"></div>
   <div class="bg-blob bg-blob-2"></div>
   <div class="bg-blob bg-blob-3"></div>
+  <div class="bg-blob bg-blob-4"></div>
+  <div class="bg-blob bg-blob-5"></div>
+  <div class="bg-blob bg-blob-6"></div>
+  <div class="bg-blob bg-blob-7"></div>
 </div>
 
 <div id="toast-container"></div>
@@ -3543,9 +3565,10 @@
   let pendingAddFriendId = null;
   let previousRoute = null;
 
-  // Each section paints the whole page background in its own accent color.
+  // Each section paints the whole page background in its own accent color —
+  // except Home, which stays white/cream with just a faint hint of every color.
   const ROUTE_PAGE_ACCENT = {
-    home: "var(--accent-home)",
+    home: "var(--ground)",
     fitness: "var(--accent-workout)",
     calories: "var(--accent-food)",
     sleep: "var(--accent-sleep)",
@@ -3556,6 +3579,7 @@
 
   function applyPageAccent(route) {
     document.documentElement.style.setProperty("--page-accent", ROUTE_PAGE_ACCENT[route] || "var(--ground)");
+    document.body.dataset.route = route;
   }
 
   function currentRoute() {
