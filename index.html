@@ -1107,6 +1107,38 @@
     letter-spacing: 0.03em;
   }
 
+  /* ---- Study focus timer ---- */
+  .timer-display {
+    font-size: 56px;
+    letter-spacing: 0.02em;
+    margin: 10px 0;
+  }
+  .concentration-scale {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .concentration-btn {
+    flex: 1;
+    min-width: 30px;
+    padding: 10px 0;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 17px;
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .concentration-btn:hover { transform: translateY(-2px); }
+  .concentration-btn.selected {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
+  }
+
   /* ---- Achievement badges ---- */
   .badges-grid {
     display: grid;
@@ -1510,6 +1542,32 @@
       </div>
 
       <section class="panel">
+        <div class="panel-header">Focus timer</div>
+        <div class="panel-body">
+          <div id="study-timer-idle">
+            <div class="field field-wide">
+              <label for="study-timer-subject">What are you studying?</label>
+              <input type="text" id="study-timer-subject" placeholder="e.g. Cell Biology — Chapter 4">
+            </div>
+            <button type="button" class="btn-submit" id="study-timer-start-btn">Start studying ▶️</button>
+          </div>
+
+          <div id="study-timer-running" hidden style="text-align:center;">
+            <p class="plan-caption" id="study-timer-subject-line">—</p>
+            <p class="plan-headline display timer-display" id="study-timer-display">00:00</p>
+            <button type="button" class="btn-submit" id="study-timer-stop-btn" style="background:#c0392b;">Stop ⏹️</button>
+          </div>
+
+          <div id="study-timer-rating" hidden>
+            <p class="plan-caption" style="text-align:center;">You studied <strong id="study-timer-final-duration">0 min</strong> — how concentrated were you?</p>
+            <div class="concentration-scale" id="concentration-scale"></div>
+            <p class="plan-caption" id="concentration-selected-label" style="text-align:center; margin-top:8px;">&nbsp;</p>
+            <button type="button" class="btn-submit" id="study-timer-save-btn" style="margin-top:10px; width:100%;" disabled>Save session</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
         <div class="panel-header">Last 7 days</div>
         <div class="panel-body">
           <div id="study-trend-chart"></div>
@@ -1598,6 +1656,14 @@
         <div class="panel-body">
           <ul class="entry-list" id="past-quizzes-list"></ul>
           <p class="empty-state" id="past-quizzes-empty" hidden>No quizzes taken yet.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">Study sessions</div>
+        <div class="panel-body">
+          <ul class="entry-list" id="study-sessions-list"></ul>
+          <p class="empty-state" id="study-sessions-empty" hidden>No study sessions logged yet — start the timer above!</p>
         </div>
       </section>
     </div>
@@ -2370,27 +2436,36 @@
     const labels = trendDayLabels(dates);
     let noteDates = [];
     let quizDates = [];
+    let sessionsByDate = {};
     if (currentUser) {
       try {
         const { data: notes } = await sb.from("study_notes").select("created_at").eq("user_id", currentUser.id);
         noteDates = (notes || []).map((n) => n.created_at.slice(0, 10));
         const { data: quizzes } = await sb.from("study_quizzes").select("completed_at").eq("user_id", currentUser.id).not("completed_at", "is", null);
         quizDates = (quizzes || []).map((q) => q.completed_at.slice(0, 10));
+        const { data: sessions } = await sb.from("study_sessions").select("started_at, duration_seconds").eq("user_id", currentUser.id);
+        (sessions || []).forEach((s) => {
+          const d = s.started_at.slice(0, 10);
+          sessionsByDate[d] = (sessionsByDate[d] || 0) + s.duration_seconds;
+        });
       } catch (e) {}
     }
-    const allDates = noteDates.concat(quizDates);
-    const values = dates.map((d) => allDates.filter((x) => x === d).length);
-    const daysActive = values.filter((v) => v > 0).length;
+    // Bar height = minutes actually studied that day (from timed sessions) — the most concrete
+    // measure of "how much" you did. Notes/quizzes still count toward the "active days" stat below.
+    const values = dates.map((d) => Math.round((sessionsByDate[d] || 0) / 60));
+    const allActiveDates = noteDates.concat(quizDates, Object.keys(sessionsByDate));
+    const daysActive = dates.filter((d) => allActiveDates.includes(d)).length;
     const weekNotes = noteDates.filter((d) => dates.includes(d)).length;
     const weekQuizzes = quizDates.filter((d) => dates.includes(d)).length;
+    const totalWeekSeconds = dates.reduce((s, d) => s + (sessionsByDate[d] || 0), 0);
     renderTrendChart("study-trend-chart", values, {
       labels,
-      maxValue: Math.max(1, ...values),
-      tickFormat: (n) => String(Math.round(n)),
-      formatValue: (v, i) => (v ? `${v} study action${v === 1 ? "" : "s"}` : "Nothing logged"),
-      barClassFn: (v) => (v ? "trend-bar-hit" : "trend-bar-miss"),
+      tickFormat: (n) => `${Math.round(n)}m`,
+      formatValue: (v, i) => (v ? `${v} min studied` : "Nothing logged"),
+      barClassFn: (v) => (v > 0 ? "trend-bar-hit" : "trend-bar-miss"),
       stats: [
         { value: `${daysActive}/7`, label: "Active days" },
+        { value: formatDurationLong(totalWeekSeconds), label: "Time studied" },
         { value: weekNotes, label: "Notes uploaded" },
         { value: weekQuizzes, label: "Quizzes done" },
       ],
@@ -2420,7 +2495,8 @@
     try {
       const { data: notes } = await sb.from("study_notes").select("id").eq("user_id", currentUser.id);
       const { data: quizzes } = await sb.from("study_quizzes").select("id").eq("user_id", currentUser.id).not("completed_at", "is", null);
-      ctx.studyCount = (notes || []).length + (quizzes || []).length;
+      const { data: sessions } = await sb.from("study_sessions").select("id").eq("user_id", currentUser.id);
+      ctx.studyCount = (notes || []).length + (quizzes || []).length + (sessions || []).length;
     } catch (e) { ctx.studyCount = 0; }
     try {
       const { data: rows } = await sb.from("friend_requests").select("id").eq("status", "accepted")
@@ -3343,6 +3419,9 @@
 
       const { data: quizDates } = await sb.from("study_quizzes").select("completed_at").eq("user_id", currentUser.id).not("completed_at", "is", null);
       (quizDates || []).forEach((q) => dates.add(q.completed_at.slice(0, 10)));
+
+      const { data: sessionDates } = await sb.from("study_sessions").select("started_at").eq("user_id", currentUser.id);
+      (sessionDates || []).forEach((s) => dates.add(s.started_at.slice(0, 10)));
     }
 
     let streak = 0;
@@ -4026,6 +4105,195 @@
     });
   }
 
+  // ---- Study focus timer ----
+  let studyTimerInterval = null;
+  let studyTimerStartMs = null;
+  let studyTimerSubject = "";
+  let studyTimerPendingDurationSec = 0;
+  let selectedConcentration = null;
+
+  function formatTimerClock(totalSeconds) {
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    const pad = (n) => String(n).padStart(2, "0");
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+  }
+
+  function formatDurationLong(totalSeconds) {
+    if (!totalSeconds) return "0 min";
+    const totalMinutes = Math.round(totalSeconds / 60);
+    if (totalMinutes < 1) return "under a minute";
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    if (h > 0) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+    return `${m} min`;
+  }
+
+  function studyTimerTick() {
+    if (!studyTimerStartMs) return;
+    const elapsed = Math.floor((Date.now() - studyTimerStartMs) / 1000);
+    const el = document.getElementById("study-timer-display");
+    if (el) el.textContent = formatTimerClock(elapsed);
+  }
+
+  function showStudyTimerRunningUI() {
+    document.getElementById("study-timer-idle").hidden = true;
+    document.getElementById("study-timer-running").hidden = false;
+    document.getElementById("study-timer-rating").hidden = true;
+    document.getElementById("study-timer-subject-line").textContent = `Studying: ${studyTimerSubject}`;
+  }
+
+  function startStudyTimer() {
+    const input = document.getElementById("study-timer-subject");
+    const subject = input.value.trim();
+    if (!subject) { input.focus(); return; }
+    studyTimerSubject = subject;
+    studyTimerStartMs = Date.now();
+    if (currentUser) {
+      localStorage.setItem(`ownday:${currentUser.id}:activeStudyTimer`, JSON.stringify({ subject, startMs: studyTimerStartMs }));
+    }
+    showStudyTimerRunningUI();
+    studyTimerTick();
+    clearInterval(studyTimerInterval);
+    studyTimerInterval = setInterval(studyTimerTick, 1000);
+  }
+
+  function stopStudyTimer() {
+    if (!studyTimerStartMs) return;
+    clearInterval(studyTimerInterval);
+    studyTimerInterval = null;
+    const elapsedSec = Math.max(1, Math.floor((Date.now() - studyTimerStartMs) / 1000));
+    studyTimerPendingDurationSec = elapsedSec;
+    if (currentUser) localStorage.removeItem(`ownday:${currentUser.id}:activeStudyTimer`);
+
+    document.getElementById("study-timer-running").hidden = true;
+    document.getElementById("study-timer-rating").hidden = false;
+    document.getElementById("study-timer-final-duration").textContent = formatDurationLong(elapsedSec);
+    selectedConcentration = null;
+    document.querySelectorAll(".concentration-btn").forEach((b) => b.classList.remove("selected"));
+    const label = document.getElementById("concentration-selected-label");
+    if (label) label.innerHTML = "&nbsp;";
+    const saveBtn = document.getElementById("study-timer-save-btn");
+    if (saveBtn) saveBtn.disabled = true;
+  }
+
+  async function saveStudyTimerSession() {
+    if (!currentUser || !selectedConcentration || !studyTimerSubject || !studyTimerStartMs) return;
+    const endMs = studyTimerStartMs + studyTimerPendingDurationSec * 1000;
+    await sb.from("study_sessions").insert({
+      user_id: currentUser.id,
+      subject: studyTimerSubject,
+      started_at: new Date(studyTimerStartMs).toISOString(),
+      ended_at: new Date(endMs).toISOString(),
+      duration_seconds: studyTimerPendingDurationSec,
+      concentration: selectedConcentration,
+    });
+    showToast(`✅ Logged ${formatDurationLong(studyTimerPendingDurationSec)} studying ${studyTimerSubject}`);
+    maybeConfetti(document.getElementById("study-timer-rating"));
+
+    studyTimerSubject = "";
+    studyTimerStartMs = null;
+    studyTimerPendingDurationSec = 0;
+    selectedConcentration = null;
+    document.getElementById("study-timer-subject").value = "";
+    document.getElementById("study-timer-rating").hidden = true;
+    document.getElementById("study-timer-idle").hidden = false;
+
+    await renderStudySessionsList();
+    await renderStudyTrend();
+    checkBadges();
+  }
+
+  function initConcentrationScale() {
+    const wrap = document.getElementById("concentration-scale");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    for (let i = 1; i <= 10; i++) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "concentration-btn";
+      btn.textContent = String(i);
+      btn.dataset.value = String(i);
+      wrap.appendChild(btn);
+    }
+    const CONCENTRATION_LABELS = {
+      1: "Very distracted", 2: "Very distracted", 3: "Distracted", 4: "So-so",
+      5: "So-so", 6: "Decent focus", 7: "Focused", 8: "Focused", 9: "Deep focus", 10: "Deep focus",
+    };
+    wrap.querySelectorAll(".concentration-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedConcentration = parseInt(btn.dataset.value, 10);
+        wrap.querySelectorAll(".concentration-btn").forEach((b) => b.classList.toggle("selected", b === btn));
+        document.getElementById("concentration-selected-label").textContent = `${selectedConcentration}/10 — ${CONCENTRATION_LABELS[selectedConcentration]}`;
+        document.getElementById("study-timer-save-btn").disabled = false;
+      });
+    });
+  }
+
+  function initStudyTimerControls() {
+    document.getElementById("study-timer-start-btn").addEventListener("click", startStudyTimer);
+    document.getElementById("study-timer-stop-btn").addEventListener("click", stopStudyTimer);
+    document.getElementById("study-timer-save-btn").addEventListener("click", saveStudyTimerSession);
+    document.getElementById("study-timer-subject").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); startStudyTimer(); }
+    });
+    initConcentrationScale();
+  }
+
+  // Resumes a timer that was left running (e.g. the page was reloaded or you navigated away mid-session).
+  function resumeStudyTimerIfActive() {
+    if (!currentUser) return;
+    const raw = localStorage.getItem(`ownday:${currentUser.id}:activeStudyTimer`);
+    if (!raw) return;
+    try {
+      const saved = JSON.parse(raw);
+      if (!saved.subject || !saved.startMs) return;
+      studyTimerSubject = saved.subject;
+      studyTimerStartMs = saved.startMs;
+      showStudyTimerRunningUI();
+      studyTimerTick();
+      clearInterval(studyTimerInterval);
+      studyTimerInterval = setInterval(studyTimerTick, 1000);
+    } catch (e) {}
+  }
+
+  async function renderStudySessionsList() {
+    const listEl = document.getElementById("study-sessions-list");
+    const emptyEl = document.getElementById("study-sessions-empty");
+    if (!listEl || !currentUser) return;
+    const { data } = await sb
+      .from("study_sessions")
+      .select("*")
+      .eq("user_id", currentUser.id)
+      .order("started_at", { ascending: false })
+      .limit(30);
+    listEl.innerHTML = "";
+    if (!data || data.length === 0) { emptyEl.hidden = false; return; }
+    emptyEl.hidden = true;
+    data.forEach((s) => {
+      const li = document.createElement("li");
+      li.className = "entry-item";
+      li.innerHTML = `
+        <div class="entry-info">
+          <span class="entry-title">${escapeHtml(s.subject)}</span>
+          <span class="entry-meta">${formatDurationLong(s.duration_seconds)} · Focus ${s.concentration}/10 · ${formatDate(s.started_at.slice(0, 10))}</span>
+        </div>
+        <button class="delete-btn" data-id="${s.id}" aria-label="Delete session" title="Delete">✕</button>
+      `;
+      listEl.appendChild(li);
+    });
+    listEl.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (confirm("Delete this study session?")) {
+          await sb.from("study_sessions").delete().eq("id", btn.dataset.id);
+          await renderStudySessionsList();
+          await renderStudyTrend();
+        }
+      });
+    });
+  }
+
   async function renderStudySection() {
     if (!currentUser) return;
     const onboardingView = document.getElementById("study-onboarding-view");
@@ -4054,7 +4322,9 @@
     await renderFlashcards();
     renderSchedule(currentStudyTest.schedule);
     await renderPastQuizzes();
+    await renderStudySessionsList();
     await renderStudyTrend();
+    resumeStudyTimerIfActive();
   }
 
   // ---- Routing ----
@@ -4360,6 +4630,7 @@
     initSleepOnboardingForm();
     initSleepLogForm();
     initStudyOnboardingForm();
+    initStudyTimerControls();
     initStudyNotesUpload();
     initStudyFlashcards();
     initStudySchedule();
