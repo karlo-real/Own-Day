@@ -1108,6 +1108,34 @@
     .badge-chip.just-unlocked { animation: none; }
     .trend-bar { transition: none; }
   }
+
+  .trend-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .trend-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .trend-stat-value {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 23px;
+    color: var(--accent);
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+  }
+  .trend-stat-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
 </style>
 </head>
 <body>
@@ -2161,9 +2189,9 @@
   function renderTrendChart(containerId, values, opts = {}) {
     const el = document.getElementById(containerId);
     if (!el) return;
-    const { labels, maxValue, formatValue, barClassFn } = opts;
+    const { labels, maxValue, formatValue, barClassFn, stats } = opts;
     const max = maxValue && maxValue > 0 ? maxValue : Math.max(1, ...values);
-    el.innerHTML = `<div class="trend-chart">${values.map((v, i) => {
+    const chartHtml = `<div class="trend-chart">${values.map((v, i) => {
       const pct = v > 0 ? Math.max(6, Math.round((v / max) * 100)) : 2;
       const cls = barClassFn ? barClassFn(v, i) : "";
       const title = formatValue ? formatValue(v, i) : String(v);
@@ -2172,18 +2200,27 @@
         <span class="trend-label">${labels[i]}</span>
       </div>`;
     }).join("")}</div>`;
+    const statsHtml = stats && stats.length
+      ? `<div class="trend-stats">${stats.map((s) => `<div class="trend-stat"><span class="trend-stat-value">${escapeHtml(String(s.value))}</span><span class="trend-stat-label">${escapeHtml(s.label)}</span></div>`).join("")}</div>`
+      : "";
+    el.innerHTML = chartHtml + statsHtml;
   }
 
   function renderFitnessTrend() {
     const dates = last7Dates();
     const labels = trendDayLabels(dates);
-    const workouts = getWorkouts();
-    const values = dates.map((d) => (workouts.some((w) => w.date === d) ? 1 : 0));
+    const weekWorkouts = getWorkouts().filter((w) => dates.includes(w.date));
+    const values = dates.map((d) => (weekWorkouts.some((w) => w.date === d) ? 1 : 0));
+    const daysActive = values.filter((v) => v).length;
     renderTrendChart("fitness-trend-chart", values, {
       labels,
       maxValue: 1,
       formatValue: (v, i) => (v ? "Workout logged" : "Rest day"),
       barClassFn: (v) => (v ? "trend-bar-hit" : "trend-bar-miss"),
+      stats: [
+        { value: `${daysActive}/7`, label: "Workout days" },
+        { value: weekWorkouts.length, label: "Exercises logged" },
+      ],
     });
   }
 
@@ -2192,6 +2229,12 @@
     const labels = trendDayLabels(dates);
     const food = getFood();
     const values = dates.map((d) => food.filter((f) => f.date === d).reduce((s, f) => s + f.calories, 0));
+    const loggedValues = values.filter((v) => v > 0);
+    const avgCals = loggedValues.length ? Math.round(loggedValues.reduce((s, v) => s + v, 0) / loggedValues.length) : 0;
+    const onTargetDays = targetCalories
+      ? values.filter((v) => v >= targetCalories * 0.85 && v <= targetCalories * 1.15).length
+      : 0;
+    const totalWeek = values.reduce((s, v) => s + v, 0);
     renderTrendChart("calories-trend-chart", values, {
       labels,
       maxValue: Math.max(targetCalories || 0, ...values, 1),
@@ -2201,6 +2244,11 @@
         if (targetCalories && v >= targetCalories * 0.85 && v <= targetCalories * 1.15) return "trend-bar-hit";
         return "trend-bar-partial";
       },
+      stats: [
+        { value: `${avgCals.toLocaleString()}`, label: "Avg kcal/day" },
+        { value: `${onTargetDays}/7`, label: "Days on target" },
+        { value: `${totalWeek.toLocaleString()}`, label: "Total this week" },
+      ],
     });
   }
 
@@ -2213,6 +2261,9 @@
       const l = logs.find((x) => x.date === d);
       return l ? l.hours : 0;
     });
+    const loggedValues = values.filter((v) => v > 0);
+    const avgHours = loggedValues.length ? loggedValues.reduce((s, v) => s + v, 0) / loggedValues.length : 0;
+    const bestNight = loggedValues.length ? Math.max(...loggedValues) : 0;
     renderTrendChart("sleep-trend-chart", values, {
       labels,
       maxValue: Math.max(targetHours || 0, ...values, 1),
@@ -2222,27 +2273,42 @@
         if (targetHours && v >= targetHours * 0.9) return "trend-bar-hit";
         return "trend-bar-partial";
       },
+      stats: [
+        { value: `${avgHours.toFixed(1)}h`, label: "Avg per night" },
+        { value: `${loggedValues.length}/7`, label: "Nights logged" },
+        { value: `${bestNight}h`, label: "Best night" },
+      ],
     });
   }
 
   async function renderStudyTrend() {
     const dates = last7Dates();
     const labels = trendDayLabels(dates);
-    let allDates = [];
+    let noteDates = [];
+    let quizDates = [];
     if (currentUser) {
       try {
         const { data: notes } = await sb.from("study_notes").select("created_at").eq("user_id", currentUser.id);
-        allDates = allDates.concat((notes || []).map((n) => n.created_at.slice(0, 10)));
+        noteDates = (notes || []).map((n) => n.created_at.slice(0, 10));
         const { data: quizzes } = await sb.from("study_quizzes").select("completed_at").eq("user_id", currentUser.id).not("completed_at", "is", null);
-        allDates = allDates.concat((quizzes || []).map((q) => q.completed_at.slice(0, 10)));
+        quizDates = (quizzes || []).map((q) => q.completed_at.slice(0, 10));
       } catch (e) {}
     }
+    const allDates = noteDates.concat(quizDates);
     const values = dates.map((d) => allDates.filter((x) => x === d).length);
+    const daysActive = values.filter((v) => v > 0).length;
+    const weekNotes = noteDates.filter((d) => dates.includes(d)).length;
+    const weekQuizzes = quizDates.filter((d) => dates.includes(d)).length;
     renderTrendChart("study-trend-chart", values, {
       labels,
       maxValue: Math.max(1, ...values),
       formatValue: (v, i) => (v ? `${v} study action${v === 1 ? "" : "s"}` : "Nothing logged"),
       barClassFn: (v) => (v ? "trend-bar-hit" : "trend-bar-miss"),
+      stats: [
+        { value: `${daysActive}/7`, label: "Active days" },
+        { value: weekNotes, label: "Notes uploaded" },
+        { value: weekQuizzes, label: "Quizzes done" },
+      ],
     });
   }
 
