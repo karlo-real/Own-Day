@@ -1016,30 +1016,59 @@
   .flashcard.flipped .flashcard-front { display: none; }
   .flashcard.flipped .flashcard-back { display: flex; }
 
-  /* ---- Trend charts (7-day mini bar charts) ---- */
-  .trend-chart {
+  /* ---- Trend charts (7-day mini bar charts with a real value axis) ---- */
+  .trend-plot-row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    height: 96px;
+  }
+  .trend-y-axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 34px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .trend-y-tick {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ink-faint);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .trend-bars-row {
+    flex: 1;
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 8px;
-    height: 96px;
-    padding-top: 8px;
+    position: relative;
+    background-image: repeating-linear-gradient(
+      to top,
+      var(--border) 0,
+      var(--border) 1px,
+      transparent 1px,
+      transparent 25%
+    );
+    background-size: 100% 100%;
   }
   .trend-col {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
     flex: 1;
     height: 100%;
+    justify-content: flex-end;
+    position: relative;
   }
   .trend-bar-track {
-    flex: 1;
     width: 100%;
     max-width: 28px;
+    height: 100%;
     display: flex;
     align-items: flex-end;
-    background: var(--surface-2);
     border-radius: 8px;
     overflow: hidden;
   }
@@ -1053,7 +1082,24 @@
   .trend-bar-hit { background: var(--accent); }
   .trend-bar-partial { background: color-mix(in srgb, var(--accent) 55%, var(--ink-faint)); }
   .trend-bar-miss { background: var(--border); }
+  .trend-labels-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .trend-y-axis-spacer {
+    width: 34px;
+    flex-shrink: 0;
+  }
+  .trend-labels {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
   .trend-label {
+    flex: 1;
+    text-align: center;
     font-size: 11px;
     font-weight: 700;
     color: var(--ink-dim);
@@ -2186,20 +2232,55 @@
     return dates.map((d) => parseLocalDate(d).toLocaleDateString(undefined, { weekday: "narrow" }));
   }
 
+  // Rounds a value up to a "nice" axis-friendly number (1/2/2.5/5/10 x a power of ten)
+  // so the y-axis reads like a real chart (0, 30, 60, 90...) instead of an arbitrary max.
+  function niceCeil(value) {
+    if (!value || value <= 0) return 1;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+    const normalized = value / magnitude;
+    let niceNormalized;
+    if (normalized <= 1) niceNormalized = 1;
+    else if (normalized <= 2) niceNormalized = 2;
+    else if (normalized <= 2.5) niceNormalized = 2.5;
+    else if (normalized <= 5) niceNormalized = 5;
+    else niceNormalized = 10;
+    return niceNormalized * magnitude;
+  }
+
   function renderTrendChart(containerId, values, opts = {}) {
     const el = document.getElementById(containerId);
     if (!el) return;
-    const { labels, maxValue, formatValue, barClassFn, stats } = opts;
-    const max = maxValue && maxValue > 0 ? maxValue : Math.max(1, ...values);
-    const chartHtml = `<div class="trend-chart">${values.map((v, i) => {
-      const pct = v > 0 ? Math.max(6, Math.round((v / max) * 100)) : 2;
+    const { labels, maxValue, formatValue, barClassFn, stats, tickFormat } = opts;
+    const dataMax = maxValue && maxValue > 0 ? maxValue : Math.max(0, ...values);
+    const axisMax = niceCeil(dataMax);
+    const fmtTick = tickFormat || ((n) => (Number.isInteger(n) ? String(n) : n.toFixed(1)));
+
+    const ticksHtml = [4, 3, 2, 1, 0].map((step) => {
+      const tickVal = (axisMax * step) / 4;
+      return `<span class="trend-y-tick">${escapeHtml(fmtTick(tickVal))}</span>`;
+    }).join("");
+
+    const barsHtml = values.map((v, i) => {
+      const pct = v > 0 ? Math.max(4, Math.round((v / axisMax) * 100)) : 0;
       const cls = barClassFn ? barClassFn(v, i) : "";
       const title = formatValue ? formatValue(v, i) : String(v);
       return `<div class="trend-col">
         <div class="trend-bar-track"><div class="trend-bar ${cls}" style="height:${Math.min(100, pct)}%" title="${escapeHtml(title)}"></div></div>
-        <span class="trend-label">${labels[i]}</span>
       </div>`;
-    }).join("")}</div>`;
+    }).join("");
+
+    const labelsHtml = labels.map((l) => `<span class="trend-label">${escapeHtml(l)}</span>`).join("");
+
+    const chartHtml = `
+      <div class="trend-plot-row">
+        <div class="trend-y-axis">${ticksHtml}</div>
+        <div class="trend-bars-row">${barsHtml}</div>
+      </div>
+      <div class="trend-labels-row">
+        <div class="trend-y-axis-spacer"></div>
+        <div class="trend-labels">${labelsHtml}</div>
+      </div>
+    `;
     const statsHtml = stats && stats.length
       ? `<div class="trend-stats">${stats.map((s) => `<div class="trend-stat"><span class="trend-stat-value">${escapeHtml(String(s.value))}</span><span class="trend-stat-label">${escapeHtml(s.label)}</span></div>`).join("")}</div>`
       : "";
@@ -2210,13 +2291,14 @@
     const dates = last7Dates();
     const labels = trendDayLabels(dates);
     const weekWorkouts = getWorkouts().filter((w) => dates.includes(w.date));
-    const values = dates.map((d) => (weekWorkouts.some((w) => w.date === d) ? 1 : 0));
-    const daysActive = values.filter((v) => v).length;
+    // Bar height = how many exercises were logged that day, so a bigger day makes a taller bar.
+    const values = dates.map((d) => weekWorkouts.filter((w) => w.date === d).length);
+    const daysActive = values.filter((v) => v > 0).length;
     renderTrendChart("fitness-trend-chart", values, {
       labels,
-      maxValue: 1,
-      formatValue: (v, i) => (v ? "Workout logged" : "Rest day"),
-      barClassFn: (v) => (v ? "trend-bar-hit" : "trend-bar-miss"),
+      formatValue: (v, i) => (v ? `${v} exercise${v === 1 ? "" : "s"} logged` : "Rest day"),
+      barClassFn: (v) => (v > 0 ? "trend-bar-hit" : "trend-bar-miss"),
+      tickFormat: (n) => String(Math.round(n)),
       stats: [
         { value: `${daysActive}/7`, label: "Workout days" },
         { value: weekWorkouts.length, label: "Exercises logged" },
@@ -2238,6 +2320,7 @@
     renderTrendChart("calories-trend-chart", values, {
       labels,
       maxValue: Math.max(targetCalories || 0, ...values, 1),
+      tickFormat: (n) => Math.round(n).toLocaleString(),
       formatValue: (v, i) => `${v.toLocaleString()} kcal`,
       barClassFn: (v) => {
         if (!v) return "trend-bar-miss";
@@ -2267,6 +2350,7 @@
     renderTrendChart("sleep-trend-chart", values, {
       labels,
       maxValue: Math.max(targetHours || 0, ...values, 1),
+      tickFormat: (n) => `${Number.isInteger(n) ? n : n.toFixed(1)}h`,
       formatValue: (v, i) => (v ? `${v}h slept` : "No log"),
       barClassFn: (v) => {
         if (!v) return "trend-bar-miss";
@@ -2302,6 +2386,7 @@
     renderTrendChart("study-trend-chart", values, {
       labels,
       maxValue: Math.max(1, ...values),
+      tickFormat: (n) => String(Math.round(n)),
       formatValue: (v, i) => (v ? `${v} study action${v === 1 ? "" : "s"}` : "Nothing logged"),
       barClassFn: (v) => (v ? "trend-bar-hit" : "trend-bar-miss"),
       stats: [
