@@ -2326,9 +2326,29 @@
     `;
   }
 
+  function resolveCalorieTargets(row) {
+    const fullProfile = withBodyStats({
+      goalDirection: row.goal_direction,
+      goalAmount: row.goal_amount,
+      durationMonths: row.duration_months,
+    });
+    if (!fullProfile) {
+      return {
+        calorieTarget: row.calorie_target,
+        proteinTarget: row.protein_target,
+        dailyAdjustment: null,
+        estWeeks: null,
+        clamped: false,
+        durationMonths: row.duration_months,
+      };
+    }
+    return generateCalorieTargets(fullProfile);
+  }
+
   async function generateAiEatingPlan() {
     const row = await getCalorieProfile();
     if (!row || !hasCompleteBodyProfile(bodyProfile)) return;
+    const targets = resolveCalorieTargets(row);
     const loadingEl = document.getElementById("cal-ai-loading");
     const errorEl = document.getElementById("cal-ai-error");
     if (loadingEl) loadingEl.hidden = false;
@@ -2342,15 +2362,16 @@
         goal_direction: row.goal_direction,
         goal_amount: row.goal_amount,
         duration_months: row.duration_months,
-        calorie_target: row.calorie_target,
-        protein_target: row.protein_target,
+        calorie_target: targets.calorieTarget,
+        protein_target: targets.proteinTarget,
+        pace_capped: targets.clamped,
       });
       await saveCalorieProfile({
         goal_direction: row.goal_direction,
         goal_amount: row.goal_amount,
         duration_months: row.duration_months,
-        calorie_target: row.calorie_target,
-        protein_target: row.protein_target,
+        calorie_target: targets.calorieTarget,
+        protein_target: targets.proteinTarget,
         ai_plan: result.plan,
       });
       renderAiPlan(result.plan);
@@ -2426,11 +2447,18 @@
     onboardingView.hidden = true;
     dash.hidden = false;
 
+    const targets = resolveCalorieTargets(row);
     const goalWord = row.goal_direction === "lose" ? "Lose" : "Gain";
-    document.getElementById("cal-goal-line").textContent =
-      `Goal: ${goalWord} ${row.goal_amount} kg over about ${row.duration_months} month${row.duration_months === 1 ? "" : "s"}.`;
-    document.getElementById("cal-plan-calories").textContent = row.calorie_target.toLocaleString();
-    document.getElementById("cal-plan-protein").textContent = `Protein target: ${row.protein_target} g/day`;
+    let paceNote;
+    if (targets.clamped) {
+      const safeWord = row.goal_direction === "lose" ? "deficit" : "surplus";
+      paceNote = ` — that ${row.duration_months}-month timeline isn't a safe pace, so we've capped it at a healthy ~${targets.dailyAdjustment} kcal/day ${safeWord} (realistically closer to ${targets.estWeeks} week${targets.estWeeks === 1 ? "" : "s"} at this rate, likely longer)`;
+    } else {
+      paceNote = ` over about ${row.duration_months} month${row.duration_months === 1 ? "" : "s"}`;
+    }
+    document.getElementById("cal-goal-line").textContent = `Goal: ${goalWord} ${row.goal_amount} kg${paceNote}.`;
+    document.getElementById("cal-plan-calories").textContent = targets.calorieTarget.toLocaleString();
+    document.getElementById("cal-plan-protein").textContent = `Protein target: ${targets.proteinTarget} g/day`;
 
     const today = todayISO();
     const yesterday = yesterdayISO();
@@ -2438,8 +2466,8 @@
     const todayCals = food.filter((f) => f.date === today).reduce((s, f) => s + f.calories, 0);
     const yesterdayCals = food.filter((f) => f.date === yesterday).reduce((s, f) => s + f.calories, 0);
     document.getElementById("cal-today-total").textContent = todayCals.toLocaleString();
-    document.getElementById("cal-today-target").textContent = row.calorie_target.toLocaleString();
-    const pct = row.calorie_target > 0 ? Math.min(100, Math.round((todayCals / row.calorie_target) * 100)) : 0;
+    document.getElementById("cal-today-target").textContent = targets.calorieTarget.toLocaleString();
+    const pct = targets.calorieTarget > 0 ? Math.min(100, Math.round((todayCals / targets.calorieTarget) * 100)) : 0;
     setRingProgress("cal-today-ring", pct);
     document.getElementById("cal-today-compare").textContent = `Yesterday: ${yesterdayCals.toLocaleString()} kcal`;
 
@@ -2466,13 +2494,14 @@
       setRingProgress("home-calories-ring", 0);
       return;
     }
+    const targets = resolveCalorieTargets(row);
     const today = todayISO();
     const todayCals = getFood().filter((f) => f.date === today).reduce((s, f) => s + f.calories, 0);
-    const pct = row.calorie_target > 0 ? Math.min(100, Math.round((todayCals / row.calorie_target) * 100)) : 0;
+    const pct = targets.calorieTarget > 0 ? Math.min(100, Math.round((todayCals / targets.calorieTarget) * 100)) : 0;
     body.innerHTML = `
       <div class="stat-row">
         <div class="stat-text">
-          <p class="tile-number display">${todayCals.toLocaleString()} <span style="font-size:15px; font-family:'Manrope',sans-serif; font-weight:700; letter-spacing:0; color: var(--ink-dim);">/ ${row.calorie_target.toLocaleString()} kcal</span></p>
+          <p class="tile-number display">${todayCals.toLocaleString()} <span style="font-size:15px; font-family:'Manrope',sans-serif; font-weight:700; letter-spacing:0; color: var(--ink-dim);">/ ${targets.calorieTarget.toLocaleString()} kcal</span></p>
           <p class="tile-sub muted">Today's food log</p>
         </div>
         ${ringSVG("home-calories-ring")}
