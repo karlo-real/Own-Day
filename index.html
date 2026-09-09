@@ -1363,7 +1363,7 @@
         <div class="tile-body" id="home-fitness-body">
           <div class="stat-row">
             <div class="stat-text">
-              <p class="tile-number display">Soon</p>
+              <p class="tile-number display">Get started</p>
               <p class="tile-sub">Set up your plan →</p>
             </div>
             <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="home-fitness-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="home-fitness-ring-label">0%</span></div>
@@ -1375,7 +1375,7 @@
         <div class="tile-body" id="home-calories-body">
           <div class="stat-row">
             <div class="stat-text">
-              <p class="tile-number display">Soon</p>
+              <p class="tile-number display">Get started</p>
               <p class="tile-sub">Set up your plan →</p>
             </div>
             <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="home-calories-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="home-calories-ring-label">0%</span></div>
@@ -1387,7 +1387,7 @@
         <div class="tile-body" id="home-sleep-body">
           <div class="stat-row">
             <div class="stat-text">
-              <p class="tile-number display">Soon</p>
+              <p class="tile-number display">Get started</p>
               <p class="tile-sub">Set up tracking →</p>
             </div>
             <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="home-sleep-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="home-sleep-ring-label">0%</span></div>
@@ -1396,10 +1396,10 @@
       </a>
       <a href="#/study" class="tile card-study">
         <div class="tile-header">📚 Study</div>
-        <div class="tile-body">
+        <div class="tile-body" id="home-study-body">
           <div class="stat-row">
             <div class="stat-text">
-              <p class="tile-number display">Soon</p>
+              <p class="tile-number display">Get started</p>
               <p class="tile-sub">Set up tracking →</p>
             </div>
             <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="home-study-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="home-study-ring-label">0%</span></div>
@@ -1411,7 +1411,7 @@
         <div class="tile-body" id="home-friends-body">
           <div class="stat-row">
             <div class="stat-text">
-              <p class="tile-number display">Soon</p>
+              <p class="tile-number display">Get started</p>
               <p class="tile-sub">Add a friend →</p>
             </div>
             <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="home-friends-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="home-friends-ring-label">0%</span></div>
@@ -2841,7 +2841,7 @@
       body.innerHTML = `
         <div class="stat-row">
           <div class="stat-text">
-            <p class="tile-number display">Soon</p>
+            <p class="tile-number display">Get started</p>
             <p class="tile-sub">Set up your plan →</p>
           </div>
           ${ringSVG("home-fitness-ring")}
@@ -3155,7 +3155,7 @@
       body.innerHTML = `
         <div class="stat-row">
           <div class="stat-text">
-            <p class="tile-number display">Soon</p>
+            <p class="tile-number display">Get started</p>
             <p class="tile-sub">Set up your plan →</p>
           </div>
           ${ringSVG("home-calories-ring")}
@@ -3388,7 +3388,7 @@
       body.innerHTML = `
         <div class="stat-row">
           <div class="stat-text">
-            <p class="tile-number display">Soon</p>
+            <p class="tile-number display">Get started</p>
             <p class="tile-sub">Set up tracking →</p>
           </div>
           ${ringSVG("home-sleep-ring")}
@@ -3412,6 +3412,40 @@
       </div>
     `;
     setRingProgress("home-sleep-ring", pct);
+  }
+
+  async function refreshHomeStudyTile() {
+    const body = document.getElementById("home-study-body");
+    if (!body || !currentUser) return;
+    body.innerHTML = skeletonStatRow();
+    const test = await getCurrentStudyTest();
+    if (!test) {
+      body.innerHTML = `
+        <div class="stat-row">
+          <div class="stat-text">
+            <p class="tile-number display">Get started</p>
+            <p class="tile-sub">Set up your plan →</p>
+          </div>
+          ${ringSVG("home-study-ring")}
+        </div>
+      `;
+      setRingProgress("home-study-ring", 0);
+      return;
+    }
+    const today = todayISO();
+    const { data: sessions } = await sb.from("study_sessions").select("started_at").eq("user_id", currentUser.id);
+    const didToday = (sessions || []).some((s) => s.started_at.slice(0, 10) === today);
+    const daysLeft = Math.max(0, Math.ceil((parseLocalDate(test.test_date) - parseLocalDate(today)) / 86400000));
+    body.innerHTML = `
+      <div class="stat-row">
+        <div class="stat-text">
+          <p class="tile-number display">${didToday ? "Done ✅" : "Not yet"}</p>
+          <p class="tile-sub ${didToday ? "" : "muted"}">${daysLeft} day${daysLeft === 1 ? "" : "s"} until test</p>
+        </div>
+        ${ringSVG("home-study-ring")}
+      </div>
+    `;
+    setRingProgress("home-study-ring", didToday ? 100 : 0);
   }
 
   // ---- Streak ----
@@ -3488,6 +3522,7 @@
     refreshHomeFitnessTile();
     await refreshHomeCaloriesTile();
     refreshHomeSleepTile();
+    refreshHomeStudyTile();
     refreshHomeFriendsTile();
     renderFitnessSection();
     await renderCaloriesSection();
