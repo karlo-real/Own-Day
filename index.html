@@ -748,6 +748,27 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  .section-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+
+  .section-tabs .split-btn {
+    flex: 1 1 auto;
+    min-width: 140px;
+    white-space: nowrap;
+    padding: 9px 14px;
+  }
+
+  .section-tab-panel { animation: studyTabIn 0.18s ease; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .section-tab-panel { animation: none; }
+  }
+
   .exercise-list {
     list-style: none;
     margin: 0;
@@ -1700,48 +1721,57 @@
         </div>
       </div>
 
-      <section class="panel">
-        <div class="panel-header">Last 7 days</div>
-        <div class="panel-body">
-          <div id="sleep-trend-chart"></div>
-        </div>
-      </section>
+      <div class="section-tabs split-toggle" id="sleep-tabs">
+        <button type="button" class="split-btn active" data-section-tab="overview">📊 Overview</button>
+        <button type="button" class="split-btn" data-section-tab="log">📝 Log sleep</button>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">
-          <span>Your wind-down plan</span>
-          <button type="button" class="btn-ghost" id="sleep-edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
-        </div>
-        <div class="panel-body">
-          <p class="plan-caption" id="sleep-age-note">—</p>
-          <ul class="food-tips" id="sleep-plan-steps"></ul>
-        </div>
-      </section>
+      <div class="section-tab-panel" data-section-panel="overview">
+        <section class="panel">
+          <div class="panel-header">Last 7 days</div>
+          <div class="panel-body">
+            <div id="sleep-trend-chart"></div>
+          </div>
+        </section>
 
-      <section class="panel">
-        <div class="panel-header">Log last night's sleep</div>
-        <div class="panel-body">
-          <form id="sleep-log-form" class="sleep-log-form">
-            <div class="field">
-              <label for="sleep-log-hours">Hours slept</label>
-              <input type="number" id="sleep-log-hours" min="0" max="16" step="0.25" placeholder="7.5" required>
-            </div>
-            <div class="field">
-              <label for="sleep-log-date">Date</label>
-              <input type="date" id="sleep-log-date" required>
-            </div>
-            <button type="submit" class="btn-submit">Add</button>
-          </form>
-        </div>
-      </section>
+        <section class="panel">
+          <div class="panel-header">
+            <span>Your wind-down plan</span>
+            <button type="button" class="btn-ghost" id="sleep-edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
+          </div>
+          <div class="panel-body">
+            <p class="plan-caption" id="sleep-age-note">—</p>
+            <ul class="food-tips" id="sleep-plan-steps"></ul>
+          </div>
+        </section>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">Sleep log</div>
-        <div class="panel-body">
-          <ul class="entry-list" id="sleep-log-list"></ul>
-          <p class="empty-state" id="sleep-log-empty" hidden>Nothing logged yet — add last night's sleep above!</p>
-        </div>
-      </section>
+      <div class="section-tab-panel" data-section-panel="log" hidden>
+        <section class="panel">
+          <div class="panel-header">Log last night's sleep</div>
+          <div class="panel-body">
+            <form id="sleep-log-form" class="sleep-log-form">
+              <div class="field">
+                <label for="sleep-log-hours">Hours slept</label>
+                <input type="number" id="sleep-log-hours" min="0" max="16" step="0.25" placeholder="7.5" required>
+              </div>
+              <div class="field">
+                <label for="sleep-log-date">Date</label>
+                <input type="date" id="sleep-log-date" required>
+              </div>
+              <button type="submit" class="btn-submit">Add</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">Sleep log</div>
+          <div class="panel-body">
+            <ul class="entry-list" id="sleep-log-list"></ul>
+            <p class="empty-state" id="sleep-log-empty" hidden>Nothing logged yet — add last night's sleep above!</p>
+          </div>
+        </section>
+      </div>
     </div>
   </section>
 
@@ -1986,62 +2016,71 @@
         </div>
       </div>
 
-      <section class="panel">
-        <div class="panel-header">Last 7 days</div>
-        <div class="panel-body">
-          <div id="fitness-trend-chart"></div>
-        </div>
-      </section>
+      <div class="section-tabs split-toggle" id="fitness-tabs">
+        <button type="button" class="split-btn active" data-section-tab="overview">📊 Overview</button>
+        <button type="button" class="split-btn" data-section-tab="log">📝 Log workout</button>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">
-          <span>Your workout plan</span>
-          <button type="button" class="btn-ghost" id="edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
-        </div>
-        <div class="panel-body">
-          <p class="plan-caption" id="plan-goal-line">Goal: —</p>
-          <p class="plan-caption" id="plan-frequency">—</p>
-          <div class="split-toggle">
-            <button type="button" class="split-btn active" id="split-gym-btn">Gym</button>
-            <button type="button" class="split-btn" id="split-home-btn">Home</button>
+      <div class="section-tab-panel" data-section-panel="overview">
+        <section class="panel">
+          <div class="panel-header">Last 7 days</div>
+          <div class="panel-body">
+            <div id="fitness-trend-chart"></div>
           </div>
-          <ul class="exercise-list" id="plan-exercises-gym"></ul>
-          <ul class="exercise-list" id="plan-exercises-home" hidden></ul>
-        </div>
-      </section>
+        </section>
 
-      <section class="panel">
-        <div class="panel-header">Log today's workout</div>
-        <div class="panel-body">
-          <form id="workout-form" class="workout-form">
-            <div class="field field-wide">
-              <label for="exercise">Exercise</label>
-              <input type="text" id="exercise" placeholder="e.g. Bench Press" required>
+        <section class="panel">
+          <div class="panel-header">
+            <span>Your workout plan</span>
+            <button type="button" class="btn-ghost" id="edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
+          </div>
+          <div class="panel-body">
+            <p class="plan-caption" id="plan-goal-line">Goal: —</p>
+            <p class="plan-caption" id="plan-frequency">—</p>
+            <div class="split-toggle">
+              <button type="button" class="split-btn active" id="split-gym-btn">Gym</button>
+              <button type="button" class="split-btn" id="split-home-btn">Home</button>
             </div>
-            <div class="field">
-              <label for="sets">Sets</label>
-              <input type="number" id="sets" min="1" step="1" placeholder="3" required>
-            </div>
-            <div class="field">
-              <label for="reps">Reps</label>
-              <input type="number" id="reps" min="1" step="1" placeholder="10" required>
-            </div>
-            <div class="field">
-              <label for="date">Date</label>
-              <input type="date" id="date" required>
-            </div>
-            <button type="submit" class="btn-submit">Add</button>
-          </form>
-        </div>
-      </section>
+            <ul class="exercise-list" id="plan-exercises-gym"></ul>
+            <ul class="exercise-list" id="plan-exercises-home" hidden></ul>
+          </div>
+        </section>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">Workout log</div>
-        <div class="panel-body">
-          <ul class="entry-list" id="workout-list"></ul>
-          <p class="empty-state" id="workout-empty" hidden>No workouts logged yet — add your first one above!</p>
-        </div>
-      </section>
+      <div class="section-tab-panel" data-section-panel="log" hidden>
+        <section class="panel">
+          <div class="panel-header">Log today's workout</div>
+          <div class="panel-body">
+            <form id="workout-form" class="workout-form">
+              <div class="field field-wide">
+                <label for="exercise">Exercise</label>
+                <input type="text" id="exercise" placeholder="e.g. Bench Press" required>
+              </div>
+              <div class="field">
+                <label for="sets">Sets</label>
+                <input type="number" id="sets" min="1" step="1" placeholder="3" required>
+              </div>
+              <div class="field">
+                <label for="reps">Reps</label>
+                <input type="number" id="reps" min="1" step="1" placeholder="10" required>
+              </div>
+              <div class="field">
+                <label for="date">Date</label>
+                <input type="date" id="date" required>
+              </div>
+              <button type="submit" class="btn-submit">Add</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">Workout log</div>
+          <div class="panel-body">
+            <ul class="entry-list" id="workout-list"></ul>
+            <p class="empty-state" id="workout-empty" hidden>No workouts logged yet — add your first one above!</p>
+          </div>
+        </section>
+      </div>
     </div>
   </section>
 
@@ -2110,63 +2149,75 @@
           </div>
         </div>
 
-        <section class="panel accent-food">
-          <div class="panel-header">Last 7 days</div>
-          <div class="panel-body">
-            <div id="calories-trend-chart"></div>
-          </div>
-        </section>
+        <div class="section-tabs split-toggle" id="calories-tabs">
+          <button type="button" class="split-btn active" data-section-tab="overview">📊 Overview</button>
+          <button type="button" class="split-btn" data-section-tab="mealplan">🍳 Meal plan</button>
+          <button type="button" class="split-btn" data-section-tab="log">📝 Log food</button>
+        </div>
 
-        <section class="panel accent-food">
-          <div class="panel-header">
-            <span>Your eating plan</span>
-            <button type="button" class="btn-ghost" id="cal-edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
-          </div>
-          <div class="panel-body">
-            <p class="plan-caption" id="cal-goal-line">Goal: —</p>
-            <p class="plan-headline display"><span id="cal-plan-calories">0</span> kcal/day</p>
-            <p class="plan-caption" id="cal-plan-protein">Protein target: 0 g/day</p>
-          </div>
-        </section>
+        <div class="section-tab-panel" data-section-panel="overview">
+          <section class="panel accent-food">
+            <div class="panel-header">Last 7 days</div>
+            <div class="panel-body">
+              <div id="calories-trend-chart"></div>
+            </div>
+          </section>
 
-        <section class="panel accent-food">
-          <div class="panel-header">Your AI meal plan</div>
-          <div class="panel-body">
-            <p class="plan-caption" id="cal-ai-loading" hidden>Cooking up your plan… 🍳</p>
-            <p class="plan-caption" id="cal-ai-error" hidden style="color:#c0392b;"></p>
-            <div id="cal-ai-plan"></div>
-            <button type="button" class="btn-ghost" id="cal-regenerate-btn" style="margin-top:12px;">Regenerate plan 🔄</button>
-          </div>
-        </section>
+          <section class="panel accent-food">
+            <div class="panel-header">
+              <span>Your eating plan</span>
+              <button type="button" class="btn-ghost" id="cal-edit-plan-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">Edit answers</button>
+            </div>
+            <div class="panel-body">
+              <p class="plan-caption" id="cal-goal-line">Goal: —</p>
+              <p class="plan-headline display"><span id="cal-plan-calories">0</span> kcal/day</p>
+              <p class="plan-caption" id="cal-plan-protein">Protein target: 0 g/day</p>
+            </div>
+          </section>
+        </div>
 
-        <section class="panel accent-food">
-          <div class="panel-header">Log today's food</div>
-          <div class="panel-body">
-            <form id="food-form" class="food-form">
-              <div class="field field-wide">
-                <label for="food-name">Food / meal</label>
-                <input type="text" id="food-name" placeholder="e.g. Chicken &amp; rice bowl" required>
-              </div>
-              <div class="field">
-                <label for="food-calories">Calories</label>
-                <input type="number" id="food-calories" min="1" step="1" placeholder="450" required>
-              </div>
-              <div class="field">
-                <label for="food-date">Date</label>
-                <input type="date" id="food-date" required>
-              </div>
-              <button type="submit" class="btn-submit">Add</button>
-            </form>
-          </div>
-        </section>
+        <div class="section-tab-panel" data-section-panel="mealplan" hidden>
+          <section class="panel accent-food">
+            <div class="panel-header">Your AI meal plan</div>
+            <div class="panel-body">
+              <p class="plan-caption" id="cal-ai-loading" hidden>Cooking up your plan… 🍳</p>
+              <p class="plan-caption" id="cal-ai-error" hidden style="color:#c0392b;"></p>
+              <div id="cal-ai-plan"></div>
+              <button type="button" class="btn-ghost" id="cal-regenerate-btn" style="margin-top:12px;">Regenerate plan 🔄</button>
+            </div>
+          </section>
+        </div>
 
-        <section class="panel accent-food">
-          <div class="panel-header">Food log</div>
-          <div class="panel-body">
-            <ul class="entry-list" id="food-list"></ul>
-            <p class="empty-state" id="food-empty" hidden>Nothing logged yet — add your first meal above!</p>
-          </div>
-        </section>
+        <div class="section-tab-panel" data-section-panel="log" hidden>
+          <section class="panel accent-food">
+            <div class="panel-header">Log today's food</div>
+            <div class="panel-body">
+              <form id="food-form" class="food-form">
+                <div class="field field-wide">
+                  <label for="food-name">Food / meal</label>
+                  <input type="text" id="food-name" placeholder="e.g. Chicken &amp; rice bowl" required>
+                </div>
+                <div class="field">
+                  <label for="food-calories">Calories</label>
+                  <input type="number" id="food-calories" min="1" step="1" placeholder="450" required>
+                </div>
+                <div class="field">
+                  <label for="food-date">Date</label>
+                  <input type="date" id="food-date" required>
+                </div>
+                <button type="submit" class="btn-submit">Add</button>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel accent-food">
+            <div class="panel-header">Food log</div>
+            <div class="panel-body">
+              <ul class="entry-list" id="food-list"></ul>
+              <p class="empty-state" id="food-empty" hidden>Nothing logged yet — add your first meal above!</p>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   </section>
@@ -2190,41 +2241,50 @@
     </div>
 
     <div id="friends-dashboard">
-      <section class="panel">
-        <div class="panel-header">My QR code</div>
-        <div class="panel-body" style="text-align:center;">
-          <div class="qr-frame" id="my-qr-code"></div>
-          <p class="plan-caption" style="margin-top:16px;">Have a friend scan this to send you a request.</p>
-        </div>
-      </section>
+      <div class="section-tabs split-toggle" id="friends-tabs">
+        <button type="button" class="split-btn active" data-section-tab="connect">🔗 Connect</button>
+        <button type="button" class="split-btn" data-section-tab="people">👥 My friends</button>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">Scan a friend's code</div>
-        <div class="panel-body">
-          <button type="button" class="btn-submit" id="start-scan-btn">Scan code 📷</button>
-          <div id="scan-area" hidden style="margin-top:16px;">
-            <video id="scan-video" playsinline muted></video>
-            <p class="plan-caption" id="scan-status" style="margin-top:10px;">Point your camera at a friend's QR code.</p>
-            <button type="button" class="btn-ghost" id="stop-scan-btn">Cancel</button>
+      <div class="section-tab-panel" data-section-panel="connect">
+        <section class="panel">
+          <div class="panel-header">My QR code</div>
+          <div class="panel-body" style="text-align:center;">
+            <div class="qr-frame" id="my-qr-code"></div>
+            <p class="plan-caption" style="margin-top:16px;">Have a friend scan this to send you a request.</p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="panel">
-        <div class="panel-header">Requests</div>
-        <div class="panel-body">
-          <ul class="entry-list" id="incoming-requests-list"></ul>
-          <p class="empty-state" id="incoming-requests-empty" hidden>No pending requests.</p>
-        </div>
-      </section>
+        <section class="panel">
+          <div class="panel-header">Scan a friend's code</div>
+          <div class="panel-body">
+            <button type="button" class="btn-submit" id="start-scan-btn">Scan code 📷</button>
+            <div id="scan-area" hidden style="margin-top:16px;">
+              <video id="scan-video" playsinline muted></video>
+              <p class="plan-caption" id="scan-status" style="margin-top:10px;">Point your camera at a friend's QR code.</p>
+              <button type="button" class="btn-ghost" id="stop-scan-btn">Cancel</button>
+            </div>
+          </div>
+        </section>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">My friends</div>
-        <div class="panel-body">
-          <ul class="entry-list" id="friends-list"></ul>
-          <p class="empty-state" id="friends-empty" hidden>No friends yet — share your QR code to connect!</p>
-        </div>
-      </section>
+      <div class="section-tab-panel" data-section-panel="people" hidden>
+        <section class="panel">
+          <div class="panel-header">Requests</div>
+          <div class="panel-body">
+            <ul class="entry-list" id="incoming-requests-list"></ul>
+            <p class="empty-state" id="incoming-requests-empty" hidden>No pending requests.</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">My friends</div>
+          <div class="panel-body">
+            <ul class="entry-list" id="friends-list"></ul>
+            <p class="empty-state" id="friends-empty" hidden>No friends yet — share your QR code to connect!</p>
+          </div>
+        </section>
+      </div>
     </div>
   </section>
 
@@ -4340,6 +4400,21 @@
     });
   }
 
+  function initSectionTabs() {
+    document.querySelectorAll(".section-tabs").forEach((tabsEl) => {
+      const scope = tabsEl.parentElement;
+      tabsEl.querySelectorAll("[data-section-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const target = btn.dataset.sectionTab;
+          tabsEl.querySelectorAll("[data-section-tab]").forEach((b) => b.classList.toggle("active", b === btn));
+          scope.querySelectorAll(":scope > [data-section-panel]").forEach((panel) => {
+            panel.hidden = panel.dataset.sectionPanel !== target;
+          });
+        });
+      });
+    });
+  }
+
   function initStudySchedule() {
     document.getElementById("study-generate-schedule-btn").addEventListener("click", async () => {
       if (!currentStudyTest) return;
@@ -5059,6 +5134,7 @@
     initStudySchedule();
     initStudyQuiz();
     initStudyTabs();
+    initSectionTabs();
     setSplit("gym");
     initSupabaseAuth();
   });
