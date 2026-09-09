@@ -930,9 +930,9 @@
   }
 
   .auth-message {
-    background: #fdeceb;
-    border: 1px solid #f3a9a1;
-    color: #b3261e;
+    background: color-mix(in srgb, var(--bad) 14%, var(--ground));
+    border: 1px solid var(--bad);
+    color: var(--ink);
     border-radius: 9px;
     padding: 10px 14px;
     font-size: 13px;
@@ -1279,6 +1279,35 @@
   }
 
   .friend-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .connect-panel-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 14px;
+    border-radius: 14px;
+    font-size: 21px;
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+
+  .friend-row-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+  .avatar-circle.accent-friends { color: var(--accent-friends); box-shadow: 0 0 0 2px var(--accent-friends); }
+
+  .friend-stats-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+
+  .friend-stat {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-dim);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 9px;
+    white-space: nowrap;
+  }
 
   #scan-video {
     width: 100%;
@@ -2607,6 +2636,7 @@
         <section class="panel">
           <div class="panel-header">My QR code</div>
           <div class="panel-body" style="text-align:center;">
+            <span class="connect-panel-icon" aria-hidden="true">📱</span>
             <div class="qr-frame" id="my-qr-code"></div>
             <p class="plan-caption" style="margin-top:16px;">Have a friend scan this to send you a request.</p>
           </div>
@@ -2614,8 +2644,10 @@
 
         <section class="panel">
           <div class="panel-header">Scan a friend's code</div>
-          <div class="panel-body">
+          <div class="panel-body" style="text-align:center;">
+            <span class="connect-panel-icon" aria-hidden="true">📷</span>
             <button type="button" class="btn-submit" id="start-scan-btn">Scan code 📷</button>
+            <p class="plan-caption" style="margin-top:16px;">Works with any friend's QR code.</p>
             <div id="scan-area" hidden style="margin-top:16px;">
               <video id="scan-video" playsinline muted></video>
               <p class="plan-caption" id="scan-status" style="margin-top:10px;">Point your camera at a friend's QR code.</p>
@@ -4534,12 +4566,16 @@
 
     incoming.forEach((r) => {
       const name = profilesById[r.requester_id]?.name || "Someone";
+      const initial = name.charAt(0).toUpperCase();
       const li = document.createElement("li");
       li.className = "entry-item";
       li.innerHTML = `
-        <div class="entry-info">
-          <span class="entry-title">${escapeHtml(name)}</span>
-          <span class="entry-meta">wants to connect</span>
+        <div class="friend-row-main">
+          <span class="avatar-circle avatar-circle-sm accent-friends">${escapeHtml(initial)}</span>
+          <div class="entry-info">
+            <span class="entry-title">${escapeHtml(name)}</span>
+            <span class="entry-meta">wants to connect</span>
+          </div>
         </div>
         <div class="request-actions">
           <button class="btn-accept" data-accept="${r.id}">Accept</button>
@@ -4573,13 +4609,20 @@
     accepted.forEach((r) => {
       const friendId = r.requester_id === currentUser.id ? r.recipient_id : r.requester_id;
       const name = profilesById[friendId]?.name || "Friend";
+      const initial = name.charAt(0).toUpperCase();
       const summary = summaryById[friendId] || { streak: 0, workouts_this_week: 0 };
       const li = document.createElement("li");
       li.className = "entry-item";
       li.innerHTML = `
-        <div class="entry-info">
-          <span class="entry-title">${escapeHtml(name)}</span>
-          <span class="entry-meta">🔥 ${summary.streak} day streak · 💪 ${summary.workouts_this_week} workouts this week</span>
+        <div class="friend-row-main">
+          <span class="avatar-circle avatar-circle-sm accent-friends">${escapeHtml(initial)}</span>
+          <div class="entry-info">
+            <span class="entry-title">${escapeHtml(name)}</span>
+            <div class="friend-stats-row">
+              <span class="friend-stat">🔥 ${summary.streak}-day streak</span>
+              <span class="friend-stat">💪 ${summary.workouts_this_week} this week</span>
+            </div>
+          </div>
         </div>
       `;
       listEl.appendChild(li);
