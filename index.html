@@ -722,6 +722,32 @@
 
   .split-btn.active { background: var(--accent); color: var(--on-accent); }
 
+  .study-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+
+  .study-tabs .split-btn {
+    flex: 1 1 auto;
+    min-width: 140px;
+    white-space: nowrap;
+    padding: 9px 14px;
+  }
+
+  .study-tab-panel { animation: studyTabIn 0.18s ease; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .study-tab-panel { animation: none; }
+  }
+
+  @keyframes studyTabIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .exercise-list {
     list-style: none;
     margin: 0;
@@ -1755,144 +1781,161 @@
         </div>
       </div>
 
-      <section class="panel">
-        <div class="panel-header">Focus timer</div>
-        <div class="panel-body">
-          <div id="study-timer-idle">
-            <div class="field field-wide">
-              <label for="study-timer-subject">What are you studying?</label>
-              <input type="text" id="study-timer-subject" placeholder="e.g. Cell Biology — Chapter 4">
+      <div class="study-tabs split-toggle" id="study-tabs">
+        <button type="button" class="split-btn active" data-study-tab="overview">📊 Overview</button>
+        <button type="button" class="split-btn" data-study-tab="notes">📸 Notes &amp; cards</button>
+        <button type="button" class="split-btn" data-study-tab="schedule">🗓️ Schedule</button>
+        <button type="button" class="split-btn" data-study-tab="quizzes">🧠 Quizzes</button>
+      </div>
+
+      <div class="study-tab-panel" data-study-panel="overview">
+        <div class="plan-grid">
+          <section class="panel">
+            <div class="panel-header">Focus timer</div>
+            <div class="panel-body">
+              <div id="study-timer-idle">
+                <div class="field field-wide">
+                  <label for="study-timer-subject">What are you studying?</label>
+                  <input type="text" id="study-timer-subject" placeholder="e.g. Cell Biology — Chapter 4">
+                </div>
+                <button type="button" class="btn-submit" id="study-timer-start-btn">Start studying ▶️</button>
+              </div>
+
+              <div id="study-timer-running" hidden style="text-align:center;">
+                <p class="plan-caption" id="study-timer-subject-line">—</p>
+                <p class="plan-headline display timer-display" id="study-timer-display">00:00</p>
+                <button type="button" class="btn-submit" id="study-timer-stop-btn" style="background:#c0392b;">Stop ⏹️</button>
+              </div>
+
+              <div id="study-timer-rating" hidden>
+                <p class="plan-caption" style="text-align:center;">You studied <strong id="study-timer-final-duration">0 min</strong> — how concentrated were you?</p>
+                <div class="concentration-scale" id="concentration-scale"></div>
+                <p class="plan-caption" id="concentration-selected-label" style="text-align:center; margin-top:8px;">&nbsp;</p>
+                <button type="button" class="btn-submit" id="study-timer-save-btn" style="margin-top:10px; width:100%;" disabled>Save session</button>
+              </div>
             </div>
-            <button type="button" class="btn-submit" id="study-timer-start-btn">Start studying ▶️</button>
-          </div>
+          </section>
 
-          <div id="study-timer-running" hidden style="text-align:center;">
-            <p class="plan-caption" id="study-timer-subject-line">—</p>
-            <p class="plan-headline display timer-display" id="study-timer-display">00:00</p>
-            <button type="button" class="btn-submit" id="study-timer-stop-btn" style="background:#c0392b;">Stop ⏹️</button>
-          </div>
-
-          <div id="study-timer-rating" hidden>
-            <p class="plan-caption" style="text-align:center;">You studied <strong id="study-timer-final-duration">0 min</strong> — how concentrated were you?</p>
-            <div class="concentration-scale" id="concentration-scale"></div>
-            <p class="plan-caption" id="concentration-selected-label" style="text-align:center; margin-top:8px;">&nbsp;</p>
-            <button type="button" class="btn-submit" id="study-timer-save-btn" style="margin-top:10px; width:100%;" disabled>Save session</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">Last 7 days</div>
-        <div class="panel-body">
-          <div id="study-trend-chart"></div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">
-          <span>Upload notes</span>
-          <button type="button" class="btn-ghost" id="study-new-test-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">New test</button>
-        </div>
-        <div class="panel-body">
-          <p class="plan-caption">Take a photo of your notes and Gemini will read them. Each photo counts against your free Gemini quota.</p>
-          <input type="file" id="study-photo-input" accept="image/*" capture="environment" multiple hidden>
-          <button type="button" class="btn-submit" id="study-upload-btn">Upload a photo 📸</button>
-          <p class="plan-caption" id="study-upload-status"></p>
-          <ul class="entry-list" id="study-notes-list" style="margin-top:16px;"></ul>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">
-          <span>Flashcards</span>
-          <button type="button" class="btn-submit" id="study-generate-flashcards-btn" style="padding:8px 16px; font-size:11px;">Generate flashcards ✨</button>
-        </div>
-        <div class="panel-body">
-          <p class="plan-caption" id="flashcards-empty">No flashcards yet — upload some notes, then generate flashcards. Generating counts against your free Gemini quota.</p>
-          <div id="flashcard-viewer" hidden>
-            <div class="flashcard-progress-row">
-              <div class="flashcard-progress-track"><div class="flashcard-progress-fill" id="flashcard-progress-fill" style="width:0%"></div></div>
-              <span class="flashcard-progress-text" id="flashcard-progress">0 / 0 mastered</span>
+          <section class="panel">
+            <div class="panel-header">Last 7 days</div>
+            <div class="panel-body">
+              <div id="study-trend-chart"></div>
             </div>
-            <div class="flashcard-scene">
-              <div class="flashcard" id="flashcard-el">
-                <div class="flashcard-inner" id="flashcard-inner">
-                  <div class="flashcard-face flashcard-front" id="flashcard-question"></div>
-                  <div class="flashcard-face flashcard-back" id="flashcard-answer"></div>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">Study sessions</div>
+          <div class="panel-body">
+            <ul class="entry-list" id="study-sessions-list"></ul>
+            <p class="empty-state" id="study-sessions-empty" hidden>No study sessions logged yet — start the timer above!</p>
+          </div>
+        </section>
+      </div>
+
+      <div class="study-tab-panel" data-study-panel="notes" hidden>
+        <section class="panel">
+          <div class="panel-header">
+            <span>Upload notes</span>
+            <button type="button" class="btn-ghost" id="study-new-test-btn" style="padding:5px 14px; font-size:11px; background:var(--ground);">New test</button>
+          </div>
+          <div class="panel-body">
+            <p class="plan-caption">Take a photo of your notes and Gemini will read them. Each photo counts against your free Gemini quota.</p>
+            <input type="file" id="study-photo-input" accept="image/*" capture="environment" multiple hidden>
+            <button type="button" class="btn-submit" id="study-upload-btn">Upload a photo 📸</button>
+            <p class="plan-caption" id="study-upload-status"></p>
+            <ul class="entry-list" id="study-notes-list" style="margin-top:16px;"></ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <span>Flashcards</span>
+            <button type="button" class="btn-submit" id="study-generate-flashcards-btn" style="padding:8px 16px; font-size:11px;">Generate flashcards ✨</button>
+          </div>
+          <div class="panel-body">
+            <p class="plan-caption" id="flashcards-empty">No flashcards yet — upload some notes, then generate flashcards. Generating counts against your free Gemini quota.</p>
+            <div id="flashcard-viewer" hidden>
+              <div class="flashcard-progress-row">
+                <div class="flashcard-progress-track"><div class="flashcard-progress-fill" id="flashcard-progress-fill" style="width:0%"></div></div>
+                <span class="flashcard-progress-text" id="flashcard-progress">0 / 0 mastered</span>
+              </div>
+              <div class="flashcard-scene">
+                <div class="flashcard" id="flashcard-el">
+                  <div class="flashcard-inner" id="flashcard-inner">
+                    <div class="flashcard-face flashcard-front" id="flashcard-question"></div>
+                    <div class="flashcard-face flashcard-back" id="flashcard-answer"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <p class="flashcard-hint" id="flashcard-hint">Tap the card to reveal the answer</p>
-            <div class="flashcard-grade-row" id="flashcard-grade-row" hidden>
-              <button type="button" class="flashcard-grade-btn dont-know" id="flashcard-dont-know">✕ Still learning</button>
-              <button type="button" class="flashcard-grade-btn know" id="flashcard-know">✓ Know it</button>
-            </div>
-            <div class="flashcard-done" id="flashcard-done" hidden>
-              <div class="flashcard-done-emoji">🎉</div>
-              <p class="flashcard-done-title">All caught up!</p>
-              <p class="flashcard-done-sub" id="flashcard-done-sub"></p>
-              <button type="button" class="btn-submit btn-onboard" id="flashcard-restart">Study again</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">
-          <span>Study schedule</span>
-          <button type="button" class="btn-submit" id="study-generate-schedule-btn" style="padding:8px 16px; font-size:11px;">Generate schedule 🗓️</button>
-        </div>
-        <div class="panel-body">
-          <p class="plan-caption" id="schedule-empty">No schedule yet — generate flashcards first, then build your schedule. Generating counts against your free Gemini quota.</p>
-          <ul class="exercise-list" id="schedule-list" hidden></ul>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-header">Quiz yourself</div>
-        <div class="panel-body">
-          <button type="button" class="btn-submit" id="study-start-quiz-btn">Start a quiz 🧠</button>
-          <p class="plan-caption">Each quiz — and grading it — counts against your free Gemini quota.</p>
-          <p class="plan-caption" id="quiz-status"></p>
-
-          <div id="quiz-taking-view" hidden>
-            <form id="quiz-form"></form>
-            <button type="submit" class="btn-submit" id="quiz-submit-btn" form="quiz-form">Submit answers</button>
-          </div>
-
-          <div id="quiz-results-view" hidden>
-            <p class="plan-caption" style="margin-top:20px;">Your score</p>
-            <p class="plan-headline display" id="quiz-score">0%</p>
-            <div class="plan-grid">
-              <div>
-                <h3 class="group-label">Strengths</h3>
-                <ul class="food-tips" id="quiz-strengths"></ul>
+              <p class="flashcard-hint" id="flashcard-hint">Tap the card to reveal the answer</p>
+              <div class="flashcard-grade-row" id="flashcard-grade-row" hidden>
+                <button type="button" class="flashcard-grade-btn dont-know" id="flashcard-dont-know">✕ Still learning</button>
+                <button type="button" class="flashcard-grade-btn know" id="flashcard-know">✓ Know it</button>
               </div>
-              <div>
-                <h3 class="group-label">Focus on next</h3>
-                <ul class="food-tips" id="quiz-weaknesses"></ul>
+              <div class="flashcard-done" id="flashcard-done" hidden>
+                <div class="flashcard-done-emoji">🎉</div>
+                <p class="flashcard-done-title">All caught up!</p>
+                <p class="flashcard-done-sub" id="flashcard-done-sub"></p>
+                <button type="button" class="btn-submit btn-onboard" id="flashcard-restart">Study again</button>
               </div>
             </div>
-            <ul class="entry-list" id="quiz-review-list" style="margin-top:16px;"></ul>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">Past quizzes</div>
-        <div class="panel-body">
-          <ul class="entry-list" id="past-quizzes-list"></ul>
-          <p class="empty-state" id="past-quizzes-empty" hidden>No quizzes taken yet.</p>
-        </div>
-      </section>
+      <div class="study-tab-panel" data-study-panel="schedule" hidden>
+        <section class="panel">
+          <div class="panel-header">
+            <span>Study schedule</span>
+            <button type="button" class="btn-submit" id="study-generate-schedule-btn" style="padding:8px 16px; font-size:11px;">Generate schedule 🗓️</button>
+          </div>
+          <div class="panel-body">
+            <p class="plan-caption" id="schedule-empty">No schedule yet — generate flashcards first, then build your schedule. Generating counts against your free Gemini quota.</p>
+            <ul class="exercise-list" id="schedule-list" hidden></ul>
+          </div>
+        </section>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">Study sessions</div>
-        <div class="panel-body">
-          <ul class="entry-list" id="study-sessions-list"></ul>
-          <p class="empty-state" id="study-sessions-empty" hidden>No study sessions logged yet — start the timer above!</p>
-        </div>
-      </section>
+      <div class="study-tab-panel" data-study-panel="quizzes" hidden>
+        <section class="panel">
+          <div class="panel-header">Quiz yourself</div>
+          <div class="panel-body">
+            <button type="button" class="btn-submit" id="study-start-quiz-btn">Start a quiz 🧠</button>
+            <p class="plan-caption">Each quiz — and grading it — counts against your free Gemini quota.</p>
+            <p class="plan-caption" id="quiz-status"></p>
+
+            <div id="quiz-taking-view" hidden>
+              <form id="quiz-form"></form>
+              <button type="submit" class="btn-submit" id="quiz-submit-btn" form="quiz-form">Submit answers</button>
+            </div>
+
+            <div id="quiz-results-view" hidden>
+              <p class="plan-caption" style="margin-top:20px;">Your score</p>
+              <p class="plan-headline display" id="quiz-score">0%</p>
+              <div class="plan-grid">
+                <div>
+                  <h3 class="group-label">Strengths</h3>
+                  <ul class="food-tips" id="quiz-strengths"></ul>
+                </div>
+                <div>
+                  <h3 class="group-label">Focus on next</h3>
+                  <ul class="food-tips" id="quiz-weaknesses"></ul>
+                </div>
+              </div>
+              <ul class="entry-list" id="quiz-review-list" style="margin-top:16px;"></ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">Past quizzes</div>
+          <div class="panel-body">
+            <ul class="entry-list" id="past-quizzes-list"></ul>
+            <p class="empty-state" id="past-quizzes-empty" hidden>No quizzes taken yet.</p>
+          </div>
+        </section>
+      </div>
     </div>
   </section>
 
@@ -4274,6 +4317,20 @@
     startFlashcardRound();
   }
 
+  function initStudyTabs() {
+    const tabsEl = document.getElementById("study-tabs");
+    if (!tabsEl) return;
+    tabsEl.querySelectorAll("[data-study-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.studyTab;
+        tabsEl.querySelectorAll("[data-study-tab]").forEach((b) => b.classList.toggle("active", b === btn));
+        document.querySelectorAll("[data-study-panel]").forEach((panel) => {
+          panel.hidden = panel.dataset.studyPanel !== target;
+        });
+      });
+    });
+  }
+
   function initStudySchedule() {
     document.getElementById("study-generate-schedule-btn").addEventListener("click", async () => {
       if (!currentStudyTest) return;
@@ -4992,6 +5049,7 @@
     initStudyFlashcards();
     initStudySchedule();
     initStudyQuiz();
+    initStudyTabs();
     setSplit("gym");
     initSupabaseAuth();
   });
