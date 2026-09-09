@@ -4592,22 +4592,13 @@
       if (!email || !password) return;
       const submitBtn = e.target.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
-      const { error: pwError } = await sb.auth.signInWithPassword({ email, password });
-      if (pwError) {
-        submitBtn.disabled = false;
-        showAuthMessage(pwError.message, true);
-        return;
-      }
-      await sb.auth.signOut();
-      const { error: otpError } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+      // Sign-in is password-only -- the email code is only used once, to verify
+      // the address at signup. Sending a fresh code on every sign-in used to
+      // burn through Supabase's default email rate limit almost immediately.
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
       submitBtn.disabled = false;
-      if (otpError) { showAuthMessage(otpError.message, true); return; }
-      pendingAuthEmail = email;
-      pendingAuthMode = "signin";
-      document.getElementById("verify-code").value = "";
-      document.getElementById("verify-title").textContent = "Enter your code";
-      document.getElementById("verify-subtitle").textContent = `We sent a sign-in code to ${email}.`;
-      showAuthForm("verify");
+      if (error) { showAuthMessage(error.message, true); return; }
+      await handleAuthenticated(data.session);
     });
 
     document.getElementById("verify-form").addEventListener("submit", async (e) => {
