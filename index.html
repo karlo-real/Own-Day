@@ -1028,6 +1028,61 @@
 
   .profile-menu-item.profile-menu-danger:hover { background: color-mix(in srgb, var(--bad) 12%, var(--surface)); color: var(--bad); }
 
+  /* ---- Edit profile modal ---- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 16, 10, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 900;
+  }
+
+  .modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 1px 2px rgba(40, 30, 15, 0.03), 0 24px 48px -20px rgba(40, 30, 15, 0.4);
+    width: 100%;
+    max-width: 420px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-title { font-size: 17px; font-weight: 800; margin: 0; }
+
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-dim);
+    font-size: 15px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-close-btn:hover { background: var(--ground); color: var(--ink); }
+
+  .modal-body { padding: 20px; }
+
+  .modal-divider { height: 1px; background: var(--border); margin: 22px 0; }
+
   /* ---- Bottom tab bar (mobile) ---- */
   .bottom-nav {
     display: none;
@@ -1797,6 +1852,9 @@
           <span class="avatar-circle avatar-circle-sm" id="topbar-avatar">?</span>
         </button>
         <div class="profile-menu-dropdown" id="profile-menu-dropdown" hidden>
+          <button type="button" class="profile-menu-item" id="edit-profile-btn">
+            <span>✏️</span><span>Edit profile</span>
+          </button>
           <button type="button" class="profile-menu-item" id="theme-toggle-btn">
             <span id="theme-toggle-icon">🌙</span><span id="theme-toggle-label">Dark mode</span>
           </button>
@@ -1818,6 +1876,52 @@
   <a href="#/friends" class="bottom-nav-link" data-route="friends"><span class="bottom-nav-icon">👥</span><span class="bottom-nav-label">Friends</span></a>
   <a href="#/admin" class="bottom-nav-link" data-route="admin" hidden><span class="bottom-nav-icon">🛠️</span><span class="bottom-nav-label">Admin</span></a>
 </nav>
+
+<div class="modal-overlay" id="edit-profile-overlay" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title">
+    <div class="modal-header">
+      <h2 class="modal-title" id="edit-profile-title">Edit profile</h2>
+      <button type="button" class="modal-close-btn" id="edit-profile-close-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="edit-profile-message" class="auth-message" hidden></div>
+
+      <form id="edit-name-form" class="auth-form">
+        <div class="field">
+          <label for="edit-profile-name">Name</label>
+          <input type="text" id="edit-profile-name" required>
+        </div>
+        <button type="submit" class="btn-submit" id="edit-name-submit-btn">Save name</button>
+      </form>
+
+      <div class="modal-divider"></div>
+
+      <form id="edit-password-form" class="auth-form">
+        <div class="field">
+          <label for="edit-profile-password">New password</label>
+          <div class="password-field">
+            <input type="password" id="edit-profile-password" minlength="6" placeholder="Leave blank to keep current password">
+            <button type="button" class="password-toggle" data-target="edit-profile-password" aria-label="Show password">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.4 20.4 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.3 20.3 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="edit-profile-password-confirm">Confirm new password</label>
+          <div class="password-field">
+            <input type="password" id="edit-profile-password-confirm" minlength="6" placeholder="Leave blank to keep current password">
+            <button type="button" class="password-toggle" data-target="edit-profile-password-confirm" aria-label="Show password">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.4 20.4 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.3 20.3 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit" id="edit-password-submit-btn">Update password</button>
+      </form>
+    </div>
+  </div>
+</div>
 
 <main class="container">
 
@@ -4802,6 +4906,98 @@
     });
   }
 
+  function initEditProfileModal() {
+    const overlay = document.getElementById("edit-profile-overlay");
+    const openBtn = document.getElementById("edit-profile-btn");
+    const closeBtn = document.getElementById("edit-profile-close-btn");
+    const nameForm = document.getElementById("edit-name-form");
+    const passwordForm = document.getElementById("edit-password-form");
+    const messageEl = document.getElementById("edit-profile-message");
+    if (!overlay || !openBtn || !nameForm || !passwordForm) return;
+
+    function showModalMessage(msg, isError) {
+      messageEl.textContent = msg;
+      messageEl.hidden = false;
+      messageEl.classList.toggle("info", !isError);
+    }
+    function clearModalMessage() {
+      messageEl.hidden = true;
+      messageEl.textContent = "";
+    }
+    function openModal() {
+      document.getElementById("edit-profile-name").value = currentUser?.name || "";
+      document.getElementById("edit-profile-password").value = "";
+      document.getElementById("edit-profile-password-confirm").value = "";
+      clearModalMessage();
+      overlay.hidden = false;
+    }
+    function closeModal() {
+      overlay.hidden = true;
+    }
+
+    openBtn.addEventListener("click", () => {
+      document.getElementById("profile-menu-dropdown").hidden = true;
+      document.getElementById("profile-menu-btn").setAttribute("aria-expanded", "false");
+      openModal();
+    });
+    closeBtn.addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.hidden) closeModal();
+    });
+
+    nameForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearModalMessage();
+      const newName = document.getElementById("edit-profile-name").value.trim();
+      if (!newName) { showModalMessage("Name can't be empty.", true); return; }
+      if (newName === currentUser.name) { showModalMessage("That's already your name.", false); return; }
+      const submitBtn = document.getElementById("edit-name-submit-btn");
+      submitBtn.disabled = true;
+      const { data: taken, error: nameCheckError } = await sb.rpc("is_name_taken", { check_name: newName });
+      if (nameCheckError) {
+        submitBtn.disabled = false;
+        showModalMessage("Something went wrong checking that name — please try again.", true);
+        return;
+      }
+      if (taken) {
+        submitBtn.disabled = false;
+        showModalMessage("That name is already taken — try a different one.", true);
+        return;
+      }
+      const { error } = await sb.auth.updateUser({ data: { name: newName } });
+      submitBtn.disabled = false;
+      if (error) { showModalMessage(error.message, true); return; }
+      // Keep the profiles-table copy (used by the friends list & admin page) in sync too.
+      await sb.from("profiles").update({ name: newName }).eq("id", currentUser.id);
+      currentUser.name = newName;
+      const firstName = newName.split(" ")[0];
+      const greeting = getTimeGreeting();
+      document.getElementById("home-greeting").textContent = `${greeting.text}, ${firstName} ${greeting.emoji}`;
+      document.getElementById("user-avatar").textContent = firstName.charAt(0).toUpperCase();
+      document.getElementById("topbar-avatar").textContent = firstName.charAt(0).toUpperCase();
+      showModalMessage("Name updated ✅", false);
+    });
+
+    passwordForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearModalMessage();
+      const pw = document.getElementById("edit-profile-password").value;
+      const pwConfirm = document.getElementById("edit-profile-password-confirm").value;
+      if (!pw && !pwConfirm) { showModalMessage("Enter a new password to update it.", true); return; }
+      if (pw.length < 6) { showModalMessage("Password must be at least 6 characters.", true); return; }
+      if (pw !== pwConfirm) { showModalMessage("Passwords don't match.", true); return; }
+      const submitBtn = document.getElementById("edit-password-submit-btn");
+      submitBtn.disabled = true;
+      const { error } = await sb.auth.updateUser({ password: pw });
+      submitBtn.disabled = false;
+      if (error) { showModalMessage(error.message, true); return; }
+      document.getElementById("edit-profile-password").value = "";
+      document.getElementById("edit-profile-password-confirm").value = "";
+      showModalMessage("Password updated ✅", false);
+    });
+  }
+
   function initThemeToggle() {
     updateThemeToggleUI();
     const btn = document.getElementById("theme-toggle-btn");
@@ -5552,6 +5748,7 @@
     initStudyTabs();
     initSectionTabs();
     initProfileMenu();
+    initEditProfileModal();
     initThemeToggle();
     setSplit("gym");
     initSupabaseAuth();
