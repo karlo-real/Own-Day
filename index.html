@@ -481,6 +481,27 @@
 
   .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
 
+  .password-field { position: relative; display: flex; align-items: center; }
+  .password-field input { width: 100%; padding-right: 44px; }
+
+  .password-toggle {
+    position: absolute;
+    right: 4px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .password-toggle:hover { color: var(--ink-dim); background: var(--ground); }
+  .password-toggle svg { width: 19px; height: 19px; }
+
   .btn-submit {
     background: var(--accent);
     color: var(--on-accent);
@@ -1323,7 +1344,13 @@
         </div>
         <div class="field">
           <label for="signin-password">Password</label>
-          <input type="password" id="signin-password" required>
+          <div class="password-field">
+            <input type="password" id="signin-password" required>
+            <button type="button" class="password-toggle" data-target="signin-password" aria-label="Show password">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.4 20.4 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.3 20.3 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
         </div>
         <button type="submit" class="btn-submit btn-onboard">Sign in</button>
       </form>
@@ -1339,7 +1366,13 @@
         </div>
         <div class="field">
           <label for="signup-password">Password</label>
-          <input type="password" id="signup-password" minlength="6" required>
+          <div class="password-field">
+            <input type="password" id="signup-password" minlength="6" required>
+            <button type="button" class="password-toggle" data-target="signup-password" aria-label="Show password">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.4 20.4 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.3 20.3 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
         </div>
         <button type="submit" class="btn-submit btn-onboard">Create account</button>
       </form>
@@ -4542,6 +4575,23 @@
     }
   }
 
+  function initPasswordToggles() {
+    document.querySelectorAll(".password-toggle").forEach((btn) => {
+      const input = document.getElementById(btn.dataset.target);
+      const eyeIcon = btn.querySelector(".icon-eye");
+      const eyeOffIcon = btn.querySelector(".icon-eye-off");
+      if (!input || !eyeIcon || !eyeOffIcon) return;
+      btn.addEventListener("click", () => {
+        const reveal = input.type === "password";
+        input.type = reveal ? "text" : "password";
+        eyeIcon.hidden = reveal;
+        eyeOffIcon.hidden = !reveal;
+        btn.setAttribute("aria-label", reveal ? "Hide password" : "Show password");
+        input.focus();
+      });
+    });
+  }
+
   function initAuthForms() {
     document.getElementById("auth-tab-signin").addEventListener("click", () => showAuthForm("signin"));
     document.getElementById("auth-tab-signup").addEventListener("click", () => showAuthForm("signup"));
@@ -4732,6 +4782,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initAuthForms();
+    initPasswordToggles();
     initProfileSetupForm();
     initOnboardingForm();
     initCaloriesOnboardingForm();
