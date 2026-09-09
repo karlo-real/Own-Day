@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Own Day</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
   :root {
     --ground: #fbf7ef;
@@ -154,24 +154,29 @@
   }
 
   .brand {
-    font-family: "Bebas Neue", sans-serif;
-    font-size: 24px;
-    letter-spacing: 0.04em;
+    font-family: "Fredoka", "Manrope", sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 0.005em;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
 
   .brand-mark {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: var(--accent-home);
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ffb35c, #ff6f6f);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
+    color: #fff;
+    box-shadow: 0 4px 10px -3px rgba(255, 122, 80, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.35);
   }
+
+  .brand-mark svg { width: 18px; height: 18px; }
 
   .nav {
     display: flex;
@@ -1838,7 +1843,7 @@
   <div class="auth-wrap">
     <div class="auth-card">
       <div class="brand" style="justify-content:center; margin-bottom:24px;">
-        <span class="brand-mark">☀️</span>Own Day
+        <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="3.8"/><line x1="12" y1="20.2" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="3.8" y2="12"/><line x1="20.2" y1="12" x2="22.5" y2="12"/><line x1="4.4" y1="4.4" x2="6" y2="6"/><line x1="18" y1="18" x2="19.6" y2="19.6"/><line x1="4.4" y1="19.6" x2="6" y2="18"/><line x1="18" y1="6" x2="19.6" y2="4.4"/></g></svg></span>Own Day
       </div>
       <h2 class="group-label" style="margin-bottom:6px;">Tell us about you</h2>
       <p class="plan-caption" style="margin-bottom:20px;">Just once — we'll use this everywhere in the app so you don't have to repeat it.</p>
@@ -1865,7 +1870,7 @@
 
 <header class="topbar">
   <div class="container topbar-inner">
-    <a href="#/" class="brand"><span class="brand-mark">☀️</span>Own Day</a>
+    <a href="#/" class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="3.8"/><line x1="12" y1="20.2" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="3.8" y2="12"/><line x1="20.2" y1="12" x2="22.5" y2="12"/><line x1="4.4" y1="4.4" x2="6" y2="6"/><line x1="18" y1="18" x2="19.6" y2="19.6"/><line x1="4.4" y1="19.6" x2="6" y2="18"/><line x1="18" y1="6" x2="19.6" y2="4.4"/></g></svg></span>Own Day</a>
     <div class="nav-group">
       <nav class="nav">
         <a href="#/" class="nav-link" data-route="home">Home</a>
