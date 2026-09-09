@@ -26,6 +26,31 @@
     --accent-admin: #d9527a;
     --good: #279155;
     --bad: #e0483f;
+    --blob-opacity-mult: 1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #1b1815;
+      --surface: #242019;
+      --surface-2: #2f2a22;
+      --border: #3c352a;
+      --ink: #f2ece0;
+      --ink-dim: #b6ac99;
+      --ink-faint: #7f7565;
+      --blob-opacity-mult: 0.4;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #1b1815;
+    --surface: #242019;
+    --surface-2: #2f2a22;
+    --border: #3c352a;
+    --ink: #f2ece0;
+    --ink-dim: #b6ac99;
+    --ink-faint: #7f7565;
+    --blob-opacity-mult: 0.4;
   }
 
   * { box-sizing: border-box; }
@@ -71,13 +96,13 @@
   .bg-blob-6 { width: 260px; height: 260px; top: 55%; left: -80px; }
   .bg-blob-7 { width: 240px; height: 240px; bottom: 30%; right: -60px; }
 
-  body[data-route="home"] .bg-blob-1 { background: var(--accent-home); opacity: 0.16; }
-  body[data-route="home"] .bg-blob-2 { background: var(--accent-sleep); opacity: 0.14; }
-  body[data-route="home"] .bg-blob-3 { background: var(--accent-friends); opacity: 0.10; }
-  body[data-route="home"] .bg-blob-4 { background: var(--accent-workout); opacity: 0.10; }
-  body[data-route="home"] .bg-blob-5 { background: var(--accent-food); opacity: 0.10; }
-  body[data-route="home"] .bg-blob-6 { background: var(--accent-study); opacity: 0.09; }
-  body[data-route="home"] .bg-blob-7 { background: var(--accent-admin); opacity: 0.09; }
+  body[data-route="home"] .bg-blob-1 { background: var(--accent-home); opacity: calc(0.16 * var(--blob-opacity-mult)); }
+  body[data-route="home"] .bg-blob-2 { background: var(--accent-sleep); opacity: calc(0.14 * var(--blob-opacity-mult)); }
+  body[data-route="home"] .bg-blob-3 { background: var(--accent-friends); opacity: calc(0.10 * var(--blob-opacity-mult)); }
+  body[data-route="home"] .bg-blob-4 { background: var(--accent-workout); opacity: calc(0.10 * var(--blob-opacity-mult)); }
+  body[data-route="home"] .bg-blob-5 { background: var(--accent-food); opacity: calc(0.10 * var(--blob-opacity-mult)); }
+  body[data-route="home"] .bg-blob-6 { background: var(--accent-study); opacity: calc(0.09 * var(--blob-opacity-mult)); }
+  body[data-route="home"] .bg-blob-7 { background: var(--accent-admin); opacity: calc(0.09 * var(--blob-opacity-mult)); }
 
   @media (prefers-reduced-motion: no-preference) {
     .streak-flame { animation: flicker 2.6s ease-in-out infinite; }
@@ -590,9 +615,29 @@
 
   .empty-state {
     text-align: center;
-    padding: 28px 16px;
+    padding: 32px 16px;
     color: var(--ink-dim);
     font-size: 14px;
+  }
+
+  .empty-state-icon {
+    display: block;
+    font-size: 32px;
+    margin-bottom: 10px;
+    line-height: 1;
+  }
+
+  .empty-state-title {
+    margin: 0 0 4px;
+    font-weight: 800;
+    color: var(--ink);
+    font-size: 14px;
+  }
+
+  .empty-state-sub {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-dim);
   }
 
   footer.container {
@@ -930,6 +975,162 @@
   }
 
   .nav-signout:hover { background: var(--surface); color: var(--ink); }
+
+  /* ---- Profile menu (topbar avatar dropdown) ---- */
+  .profile-menu { position: relative; }
+
+  .profile-menu-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    border-radius: 50%;
+  }
+
+  .avatar-circle-sm {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 15px;
+  }
+
+  .profile-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(40, 30, 15, 0.03), 0 16px 32px -16px rgba(40, 30, 15, 0.28);
+    padding: 6px;
+    min-width: 190px;
+    z-index: 20;
+  }
+
+  .profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .profile-menu-item:hover { background: var(--ground); }
+
+  .profile-menu-item.profile-menu-danger:hover { background: color-mix(in srgb, var(--bad) 12%, var(--surface)); color: var(--bad); }
+
+  /* ---- Bottom tab bar (mobile) ---- */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 15;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    justify-content: space-around;
+  }
+
+  .bottom-nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 4px 2px;
+    border-radius: 12px;
+    color: var(--ink-faint);
+  }
+
+  .bottom-nav-icon { font-size: 20px; line-height: 1; }
+
+  .bottom-nav-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .bottom-nav-link.active { color: var(--ink); }
+  .bottom-nav-link.active[data-route="home"] { color: var(--accent-home); }
+  .bottom-nav-link.active[data-route="fitness"] { color: var(--accent-workout); }
+  .bottom-nav-link.active[data-route="calories"] { color: var(--accent-food); }
+  .bottom-nav-link.active[data-route="sleep"] { color: var(--accent-sleep); }
+  .bottom-nav-link.active[data-route="study"] { color: var(--accent-study); }
+  .bottom-nav-link.active[data-route="friends"] { color: var(--accent-friends); }
+  .bottom-nav-link.active[data-route="admin"] { color: var(--accent-admin); }
+
+  @media (max-width: 720px) {
+    .topbar-inner .nav { display: none; }
+    .bottom-nav { display: flex; }
+    main.container { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+    footer.container { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  }
+
+  /* ---- Home priority card ---- */
+  .home-priority-card {
+    --accent: var(--accent-home);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 18px 0 24px;
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+    box-shadow: 0 1px 2px rgba(40, 30, 15, 0.03), 0 10px 24px -16px rgba(40, 30, 15, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .home-priority-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(40, 30, 15, 0.05), 0 14px 28px -16px rgba(40, 30, 15, 0.22);
+  }
+
+  .home-priority-card[data-kind="fitness"] { --accent: var(--accent-workout); }
+  .home-priority-card[data-kind="calories"] { --accent: var(--accent-food); }
+  .home-priority-card[data-kind="sleep"] { --accent: var(--accent-sleep); }
+  .home-priority-card[data-kind="study"] { --accent: var(--accent-study); }
+  .home-priority-card[data-kind="friends"] { --accent: var(--accent-friends); }
+  .home-priority-card[data-kind="done"] { --accent: var(--good); }
+
+  .home-priority-icon { font-size: 28px; flex-shrink: 0; }
+
+  .home-priority-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .home-priority-title {
+    font-family: "Manrope", sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    color: color-mix(in srgb, var(--accent) 62%, var(--ink));
+  }
+
+  .home-priority-sub { font-size: 13px; color: var(--ink-dim); }
+
+  .home-priority-arrow { font-size: 18px; color: var(--ink-faint); flex-shrink: 0; }
 
   /* ---- Streak ---- */
   .streak-badge {
@@ -1591,10 +1792,32 @@
         <a href="#/friends" class="nav-link" data-route="friends">Friends</a>
         <a href="#/admin" class="nav-link" data-route="admin" id="nav-admin-link" hidden>Admin</a>
       </nav>
-      <button type="button" class="nav-signout" id="signout-btn">Sign out</button>
+      <div class="profile-menu" id="profile-menu">
+        <button type="button" class="profile-menu-btn" id="profile-menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+          <span class="avatar-circle avatar-circle-sm" id="topbar-avatar">?</span>
+        </button>
+        <div class="profile-menu-dropdown" id="profile-menu-dropdown" hidden>
+          <button type="button" class="profile-menu-item" id="theme-toggle-btn">
+            <span id="theme-toggle-icon">🌙</span><span id="theme-toggle-label">Dark mode</span>
+          </button>
+          <button type="button" class="profile-menu-item profile-menu-danger" id="signout-btn">
+            <span>🚪</span><span>Sign out</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
+
+<nav class="bottom-nav" id="bottom-nav">
+  <a href="#/" class="bottom-nav-link" data-route="home"><span class="bottom-nav-icon">🏠</span><span class="bottom-nav-label">Home</span></a>
+  <a href="#/fitness" class="bottom-nav-link" data-route="fitness"><span class="bottom-nav-icon">🏋️</span><span class="bottom-nav-label">Fitness</span></a>
+  <a href="#/calories" class="bottom-nav-link" data-route="calories"><span class="bottom-nav-icon">🍎</span><span class="bottom-nav-label">Calories</span></a>
+  <a href="#/sleep" class="bottom-nav-link" data-route="sleep"><span class="bottom-nav-icon">🌙</span><span class="bottom-nav-label">Sleep</span></a>
+  <a href="#/study" class="bottom-nav-link" data-route="study"><span class="bottom-nav-icon">📚</span><span class="bottom-nav-label">Study</span></a>
+  <a href="#/friends" class="bottom-nav-link" data-route="friends"><span class="bottom-nav-icon">👥</span><span class="bottom-nav-label">Friends</span></a>
+  <a href="#/admin" class="bottom-nav-link" data-route="admin" hidden><span class="bottom-nav-icon">🛠️</span><span class="bottom-nav-label">Admin</span></a>
+</nav>
 
 <main class="container">
 
@@ -1609,6 +1832,16 @@
       <h1 class="page-title display" id="home-greeting">Welcome back 👋</h1>
     </div>
     <p class="page-subtitle">Here's your day at a glance.</p>
+
+    <a href="#/" class="home-priority-card" id="home-priority-card" hidden data-kind="home">
+      <span class="home-priority-icon" id="home-priority-icon">🚀</span>
+      <span class="home-priority-text">
+        <span class="home-priority-title" id="home-priority-title">—</span>
+        <span class="home-priority-sub" id="home-priority-sub">—</span>
+      </span>
+      <span class="home-priority-arrow">→</span>
+    </a>
+
     <div class="tile-grid">
       <a href="#/fitness" class="tile card-fitness">
         <div class="tile-header">🏋️ Fitness</div>
@@ -1768,7 +2001,11 @@
           <div class="panel-header">Sleep log</div>
           <div class="panel-body">
             <ul class="entry-list" id="sleep-log-list"></ul>
-            <p class="empty-state" id="sleep-log-empty" hidden>Nothing logged yet — add last night's sleep above!</p>
+            <div class="empty-state" id="sleep-log-empty" hidden>
+              <span class="empty-state-icon">🌙</span>
+              <p class="empty-state-title">Nothing logged yet</p>
+              <p class="empty-state-sub">Add last night's sleep above.</p>
+            </div>
           </div>
         </section>
       </div>
@@ -1858,7 +2095,11 @@
           <div class="panel-header">Study sessions</div>
           <div class="panel-body">
             <ul class="entry-list" id="study-sessions-list"></ul>
-            <p class="empty-state" id="study-sessions-empty" hidden>No study sessions logged yet — start the timer above!</p>
+            <div class="empty-state" id="study-sessions-empty" hidden>
+              <span class="empty-state-icon">⏱️</span>
+              <p class="empty-state-title">No sessions yet</p>
+              <p class="empty-state-sub">Start the focus timer above.</p>
+            </div>
           </div>
         </section>
       </div>
@@ -1962,7 +2203,11 @@
           <div class="panel-header">Past quizzes</div>
           <div class="panel-body">
             <ul class="entry-list" id="past-quizzes-list"></ul>
-            <p class="empty-state" id="past-quizzes-empty" hidden>No quizzes taken yet.</p>
+            <div class="empty-state" id="past-quizzes-empty" hidden>
+              <span class="empty-state-icon">🧠</span>
+              <p class="empty-state-title">No quizzes yet</p>
+              <p class="empty-state-sub">Take a quiz to see your results here.</p>
+            </div>
           </div>
         </section>
       </div>
@@ -2077,7 +2322,11 @@
           <div class="panel-header">Workout log</div>
           <div class="panel-body">
             <ul class="entry-list" id="workout-list"></ul>
-            <p class="empty-state" id="workout-empty" hidden>No workouts logged yet — add your first one above!</p>
+            <div class="empty-state" id="workout-empty" hidden>
+              <span class="empty-state-icon">🏋️</span>
+              <p class="empty-state-title">No workouts yet</p>
+              <p class="empty-state-sub">Add your first one above.</p>
+            </div>
           </div>
         </section>
       </div>
@@ -2214,7 +2463,11 @@
             <div class="panel-header">Food log</div>
             <div class="panel-body">
               <ul class="entry-list" id="food-list"></ul>
-              <p class="empty-state" id="food-empty" hidden>Nothing logged yet — add your first meal above!</p>
+              <div class="empty-state" id="food-empty" hidden>
+                <span class="empty-state-icon">🍎</span>
+                <p class="empty-state-title">Nothing logged yet</p>
+                <p class="empty-state-sub">Add your first meal above.</p>
+              </div>
             </div>
           </section>
         </div>
@@ -2273,7 +2526,11 @@
           <div class="panel-header">Requests</div>
           <div class="panel-body">
             <ul class="entry-list" id="incoming-requests-list"></ul>
-            <p class="empty-state" id="incoming-requests-empty" hidden>No pending requests.</p>
+            <div class="empty-state" id="incoming-requests-empty" hidden>
+              <span class="empty-state-icon">📬</span>
+              <p class="empty-state-title">No pending requests</p>
+              <p class="empty-state-sub">New friend requests will show up here.</p>
+            </div>
           </div>
         </section>
 
@@ -2281,7 +2538,11 @@
           <div class="panel-header">My friends</div>
           <div class="panel-body">
             <ul class="entry-list" id="friends-list"></ul>
-            <p class="empty-state" id="friends-empty" hidden>No friends yet — share your QR code to connect!</p>
+            <div class="empty-state" id="friends-empty" hidden>
+              <span class="empty-state-icon">👥</span>
+              <p class="empty-state-title">No friends yet</p>
+              <p class="empty-state-sub">Share your QR code to connect.</p>
+            </div>
           </div>
         </section>
       </div>
@@ -2295,8 +2556,16 @@
       <div class="panel-header">All users</div>
       <div class="panel-body">
         <ul class="entry-list" id="admin-user-list"></ul>
-        <p class="empty-state" id="admin-empty" hidden>No users found.</p>
-        <p class="empty-state" id="admin-denied" hidden>You don't have access to this page.</p>
+        <div class="empty-state" id="admin-empty" hidden>
+          <span class="empty-state-icon">🗂️</span>
+          <p class="empty-state-title">No users found</p>
+          <p class="empty-state-sub">Nobody has signed up yet.</p>
+        </div>
+        <div class="empty-state" id="admin-denied" hidden>
+          <span class="empty-state-icon">🔒</span>
+          <p class="empty-state-title">Access denied</p>
+          <p class="empty-state-sub">You don't have permission to view this page.</p>
+        </div>
       </div>
     </section>
   </section>
@@ -2311,6 +2580,43 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
+  // ---- Theme (light / dark) ---- applied first, before anything that could
+  // fail (e.g. a slow/blocked CDN script below), so the right theme is set
+  // as early as possible and never depends on the rest of the app loading.
+  function getStoredTheme() {
+    try {
+      return localStorage.getItem("ownday:theme");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function isDarkActive() {
+    const stored = getStoredTheme();
+    if (stored === "dark") return true;
+    if (stored === "light") return false;
+    return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  }
+
+  function updateThemeToggleUI() {
+    const icon = document.getElementById("theme-toggle-icon");
+    const label = document.getElementById("theme-toggle-label");
+    const dark = isDarkActive();
+    if (icon) icon.textContent = dark ? "☀️" : "🌙";
+    if (label) label.textContent = dark ? "Light mode" : "Dark mode";
+  }
+
+  function applyTheme(theme) {
+    if (theme === "dark" || theme === "light") {
+      document.documentElement.setAttribute("data-theme", theme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+    updateThemeToggleUI();
+  }
+
+  applyTheme(getStoredTheme());
+
   const SUPABASE_URL = "https://nnaslgkqixubdohwmkzu.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uYXNsZ2txaXh1YmRvaHdta3p1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2MjA5MTQsImV4cCI6MjEwNDE5NjkxNH0.Z_cX3OB3OdBuplsIBGFBIx_rWotA6nnvPFC-2ea8z4s";
   const ADMIN_EMAIL = "karlo.kotrnec@gmail.com";
@@ -3851,6 +4157,74 @@
     syncActivitySummary();
     checkDailyGoalsCelebration();
     checkBadges();
+    refreshHomePriorityCard();
+  }
+
+  // ---- Home priority card (what most needs attention today) ----
+  async function computeHomePriority() {
+    if (!currentUser) return null;
+    const today = todayISO();
+
+    const test = await getCurrentStudyTest();
+    let studiedToday = false;
+    if (test) {
+      const { data: sessions } = await sb.from("study_sessions").select("started_at").eq("user_id", currentUser.id);
+      studiedToday = (sessions || []).some((s) => s.started_at.slice(0, 10) === today);
+      const daysLeft = Math.max(0, Math.ceil((parseLocalDate(test.test_date) - parseLocalDate(today)) / 86400000));
+      if (daysLeft <= 3 && !studiedToday) {
+        return {
+          kind: "study",
+          icon: "📚",
+          href: "#/study",
+          title: daysLeft === 0 ? "Your test is today!" : `Test in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`,
+          sub: "You haven't studied yet today — tap to review.",
+        };
+      }
+    }
+
+    const calorieRow = await getCalorieProfile();
+    const sleepProfile = await getSleepProfile();
+    const setupChecks = [
+      { kind: "fitness", icon: "🏋️", href: "#/fitness", title: "Set up your fitness plan", sub: "Tell us your goal to get a training plan.", ready: !!getProfile() },
+      { kind: "calories", icon: "🍎", href: "#/calories", title: "Set up your eating plan", sub: "Build a calorie & protein target.", ready: !!calorieRow },
+      { kind: "sleep", icon: "🌙", href: "#/sleep", title: "Set up sleep tracking", sub: "Build your wind-down plan.", ready: !!sleepProfile },
+      { kind: "study", icon: "📚", href: "#/study", title: "Set up a test to study for", sub: "Add a subject and test date.", ready: !!test },
+    ];
+    for (const c of setupChecks) {
+      if (!c.ready) return { kind: c.kind, icon: c.icon, href: c.href, title: c.title, sub: c.sub };
+    }
+
+    if (!getWorkouts().some((w) => w.date === today)) {
+      return { kind: "fitness", icon: "🏋️", href: "#/fitness", title: "No workout logged today", sub: "Log today's training when you're done." };
+    }
+    if (!getFood().some((f) => f.date === today)) {
+      return { kind: "calories", icon: "🍎", href: "#/calories", title: "No meals logged today", sub: "Log what you've eaten so far." };
+    }
+    const sleepLogs = await getSleepLogs();
+    if (!sleepLogs.some((l) => l.date === today)) {
+      return { kind: "sleep", icon: "🌙", href: "#/sleep", title: "Last night's sleep isn't logged", sub: "Add it to keep your streak going." };
+    }
+    if (!studiedToday) {
+      return { kind: "study", icon: "📚", href: "#/study", title: "No study session today", sub: "Even a quick review session counts." };
+    }
+
+    return { kind: "done", icon: "✅", href: "#/", title: "You're all caught up today!", sub: "Nice work — check back tomorrow." };
+  }
+
+  async function refreshHomePriorityCard() {
+    const card = document.getElementById("home-priority-card");
+    if (!card) return;
+    const p = await computeHomePriority();
+    if (!p) {
+      card.hidden = true;
+      return;
+    }
+    card.hidden = false;
+    card.dataset.kind = p.kind;
+    card.href = p.href;
+    document.getElementById("home-priority-icon").textContent = p.icon;
+    document.getElementById("home-priority-title").textContent = p.title;
+    document.getElementById("home-priority-sub").textContent = p.sub;
   }
 
   // ---- Friends ----
@@ -4400,6 +4774,47 @@
     });
   }
 
+  function initProfileMenu() {
+    const menu = document.getElementById("profile-menu");
+    const btn = document.getElementById("profile-menu-btn");
+    const dropdown = document.getElementById("profile-menu-dropdown");
+    if (!menu || !btn || !dropdown) return;
+
+    function closeMenu() {
+      dropdown.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+    }
+    function openMenu() {
+      dropdown.hidden = false;
+      btn.setAttribute("aria-expanded", "true");
+    }
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (dropdown.hidden) openMenu();
+      else closeMenu();
+    });
+    document.addEventListener("click", (e) => {
+      if (!dropdown.hidden && !menu.contains(e.target)) closeMenu();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !dropdown.hidden) closeMenu();
+    });
+  }
+
+  function initThemeToggle() {
+    updateThemeToggleUI();
+    const btn = document.getElementById("theme-toggle-btn");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      const next = isDarkActive() ? "light" : "dark";
+      try {
+        localStorage.setItem("ownday:theme", next);
+      } catch (e) {}
+      applyTheme(next);
+    });
+  }
+
   function initSectionTabs() {
     document.querySelectorAll(".section-tabs").forEach((tabsEl) => {
       const scope = tabsEl.parentElement;
@@ -4853,7 +5268,7 @@
         el.classList.remove("view-exit");
         el.hidden = el.dataset.view !== route;
       });
-      document.querySelectorAll(".nav-link").forEach((a) => { a.classList.toggle("active", a.dataset.route === route); });
+      document.querySelectorAll(".nav-link, .bottom-nav-link").forEach((a) => { a.classList.toggle("active", a.dataset.route === route); });
       window.scrollTo(0, 0);
       const next = document.querySelector(`[data-view="${route}"]`);
       if (next) {
@@ -5033,11 +5448,12 @@
       email: session.user.email,
       name: session.user.user_metadata?.name || session.user.email,
     };
-    document.getElementById("nav-admin-link").hidden = currentUser.email !== ADMIN_EMAIL;
+    document.querySelectorAll('[data-route="admin"]').forEach((el) => { el.hidden = currentUser.email !== ADMIN_EMAIL; });
     const firstName = currentUser.name.split(" ")[0];
     const greeting = getTimeGreeting();
     document.getElementById("home-greeting").textContent = `${greeting.text}, ${firstName} ${greeting.emoji}`;
     document.getElementById("user-avatar").textContent = firstName.charAt(0).toUpperCase();
+    document.getElementById("topbar-avatar").textContent = firstName.charAt(0).toUpperCase();
 
     bodyProfile = await fetchBodyProfile();
     document.getElementById("loading-screen").hidden = true;
@@ -5135,6 +5551,8 @@
     initStudyQuiz();
     initStudyTabs();
     initSectionTabs();
+    initProfileMenu();
+    initThemeToggle();
     setSplit("gym");
     initSupabaseAuth();
   });
