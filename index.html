@@ -25,6 +25,7 @@
     --accent-study: #23aec9;
     --accent-admin: #d9527a;
     --good: #279155;
+    --bad: #e0483f;
   }
 
   * { box-sizing: border-box; }
@@ -1081,28 +1082,137 @@
   }
 
   /* ---- Flashcards ---- */
+  .flashcard-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .flashcard-progress-track {
+    flex: 1;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .flashcard-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--good);
+    transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .flashcard-progress-text {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--ink-dim);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .flashcard-scene { perspective: 1400px; }
+
+  .flashcard {
+    position: relative;
+    min-height: 220px;
+    cursor: pointer;
+  }
+
+  .flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 220px;
+    transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+
   .flashcard-face {
-    padding: 24px;
-    border: 1px solid var(--border);
-    border-radius: 18px;
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
+    padding: 28px 26px;
+    border-radius: 22px;
     font-weight: 700;
-    font-size: 17px;
-    min-height: 140px;
-    background: var(--ground);
+    font-size: 19px;
+    line-height: 1.4;
+    box-shadow: 0 1px 2px rgba(40, 30, 15, 0.03), 0 16px 32px -18px rgba(40, 30, 15, 0.28);
+  }
+
+  .flashcard-front {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--ink);
   }
 
   .flashcard-back {
-    display: none;
-    background: color-mix(in srgb, var(--accent) 10%, var(--ground));
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
     color: var(--accent);
+    transform: rotateY(180deg);
   }
 
-  .flashcard.flipped .flashcard-front { display: none; }
-  .flashcard.flipped .flashcard-back { display: flex; }
+  @media (prefers-reduced-motion: no-preference) {
+    .flashcard.grade-flash-know .flashcard-face { animation: flashKnow 0.26s ease; }
+    .flashcard.grade-flash-dontknow .flashcard-face { animation: flashDontKnow 0.26s ease; }
+  }
+  @keyframes flashKnow {
+    0%, 100% { box-shadow: 0 1px 2px rgba(40, 30, 15, 0.03), 0 16px 32px -18px rgba(40, 30, 15, 0.28); }
+    40% { box-shadow: 0 0 0 3px var(--good) inset, 0 1px 2px rgba(40, 30, 15, 0.03), 0 16px 32px -18px rgba(40, 30, 15, 0.28); }
+  }
+  @keyframes flashDontKnow {
+    0%, 100% { box-shadow: 0 1px 2px rgba(40, 30, 15, 0.03), 0 16px 32px -18px rgba(40, 30, 15, 0.28); }
+    40% { box-shadow: 0 0 0 3px var(--bad) inset, 0 1px 2px rgba(40, 30, 15, 0.03), 0 16px 32px -18px rgba(40, 30, 15, 0.28); }
+  }
+
+  .flashcard-hint {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-faint);
+    margin: 12px 0 0;
+  }
+
+  .flashcard-grade-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .flashcard-grade-btn {
+    flex: 1;
+    padding: 13px 0;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 13px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s ease, filter 0.15s ease;
+  }
+  .flashcard-grade-btn:hover { transform: translateY(-2px); }
+
+  .flashcard-grade-btn.dont-know {
+    background: color-mix(in srgb, var(--bad) 14%, var(--surface));
+    color: var(--bad);
+    border-color: color-mix(in srgb, var(--bad) 35%, transparent);
+  }
+
+  .flashcard-grade-btn.know {
+    background: color-mix(in srgb, var(--good) 14%, var(--surface));
+    color: var(--good);
+    border-color: color-mix(in srgb, var(--good) 35%, transparent);
+  }
+
+  .flashcard-done { text-align: center; padding: 20px 10px 6px; }
+  .flashcard-done-emoji { font-size: 40px; margin-bottom: 6px; }
+  .flashcard-done-title { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+  .flashcard-done-sub { font-size: 13px; color: var(--ink-dim); margin: 0 0 18px; }
 
   /* ---- Trend charts (7-day mini bar charts with a real value axis) ---- */
   .trend-plot-row {
@@ -1700,16 +1810,29 @@
         <div class="panel-body">
           <p class="plan-caption" id="flashcards-empty">No flashcards yet — upload some notes, then generate flashcards. Generating counts against your free Gemini quota.</p>
           <div id="flashcard-viewer" hidden>
-            <div class="flashcard" id="flashcard-el">
-              <div class="flashcard-face flashcard-front" id="flashcard-question"></div>
-              <div class="flashcard-face flashcard-back" id="flashcard-answer"></div>
+            <div class="flashcard-progress-row">
+              <div class="flashcard-progress-track"><div class="flashcard-progress-fill" id="flashcard-progress-fill" style="width:0%"></div></div>
+              <span class="flashcard-progress-text" id="flashcard-progress">0 / 0 mastered</span>
             </div>
-            <div class="friend-actions" style="margin-top:14px; justify-content:center;">
-              <button type="button" class="btn-ghost" id="flashcard-prev">← Prev</button>
-              <button type="button" class="btn-submit" id="flashcard-flip">Flip</button>
-              <button type="button" class="btn-ghost" id="flashcard-next">Next →</button>
+            <div class="flashcard-scene">
+              <div class="flashcard" id="flashcard-el">
+                <div class="flashcard-inner" id="flashcard-inner">
+                  <div class="flashcard-face flashcard-front" id="flashcard-question"></div>
+                  <div class="flashcard-face flashcard-back" id="flashcard-answer"></div>
+                </div>
+              </div>
             </div>
-            <p class="plan-caption" style="text-align:center; margin-top:8px;" id="flashcard-progress">1 / 10</p>
+            <p class="flashcard-hint" id="flashcard-hint">Tap the card to reveal the answer</p>
+            <div class="flashcard-grade-row" id="flashcard-grade-row" hidden>
+              <button type="button" class="flashcard-grade-btn dont-know" id="flashcard-dont-know">✕ Still learning</button>
+              <button type="button" class="flashcard-grade-btn know" id="flashcard-know">✓ Know it</button>
+            </div>
+            <div class="flashcard-done" id="flashcard-done" hidden>
+              <div class="flashcard-done-emoji">🎉</div>
+              <p class="flashcard-done-title">All caught up!</p>
+              <p class="flashcard-done-sub" id="flashcard-done-sub"></p>
+              <button type="button" class="btn-submit btn-onboard" id="flashcard-restart">Study again</button>
+            </div>
           </div>
         </div>
       </section>
@@ -3914,8 +4037,19 @@
   // ---- Study (Gemini-backed) ----
   let currentStudyTest = null;
   let currentFlashcards = [];
-  let currentFlashcardIndex = 0;
+  let flashcardQueue = [];
+  let flashcardMastered = 0;
+  let currentFlashcard = null;
   let currentQuiz = null;
+
+  function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
 
   async function callStudyAI(payload) {
     const { data, error } = await sb.functions.invoke("study-ai", { body: payload });
@@ -4040,34 +4174,94 @@
       btn.textContent = "Generate flashcards ✨";
     });
 
-    document.getElementById("flashcard-flip").addEventListener("click", () => {
-      document.getElementById("flashcard-el").classList.toggle("flipped");
+    document.getElementById("flashcard-el").addEventListener("click", () => {
+      if (!currentFlashcard) return;
+      flipFlashcard();
     });
-    document.getElementById("flashcard-prev").addEventListener("click", () => {
-      if (currentFlashcards.length === 0) return;
-      currentFlashcardIndex = (currentFlashcardIndex - 1 + currentFlashcards.length) % currentFlashcards.length;
-      showFlashcard();
+    document.getElementById("flashcard-dont-know").addEventListener("click", (e) => {
+      e.stopPropagation();
+      gradeFlashcard(false);
     });
-    document.getElementById("flashcard-next").addEventListener("click", () => {
-      if (currentFlashcards.length === 0) return;
-      currentFlashcardIndex = (currentFlashcardIndex + 1) % currentFlashcards.length;
-      showFlashcard();
+    document.getElementById("flashcard-know").addEventListener("click", (e) => {
+      e.stopPropagation();
+      gradeFlashcard(true);
     });
+    document.getElementById("flashcard-restart").addEventListener("click", () => startFlashcardRound());
   }
 
-  function showFlashcard() {
-    const card = currentFlashcards[currentFlashcardIndex];
-    if (!card) return;
-    document.getElementById("flashcard-el").classList.remove("flipped");
-    document.getElementById("flashcard-question").textContent = card.question;
-    document.getElementById("flashcard-answer").textContent = card.answer;
-    document.getElementById("flashcard-progress").textContent = `${currentFlashcardIndex + 1} / ${currentFlashcards.length}`;
+  function flipFlashcard() {
+    const el = document.getElementById("flashcard-el");
+    const nowFlipped = !el.classList.contains("flipped");
+    el.classList.toggle("flipped", nowFlipped);
+    document.getElementById("flashcard-hint").textContent = nowFlipped
+      ? "Do you know it?"
+      : "Tap the card to reveal the answer";
+    document.getElementById("flashcard-grade-row").hidden = !nowFlipped;
+  }
+
+  function gradeFlashcard(knowsIt) {
+    if (!currentFlashcard) return;
+    const el = document.getElementById("flashcard-el");
+    el.classList.remove("grade-flash-know", "grade-flash-dontknow");
+    void el.offsetWidth;
+    el.classList.add(knowsIt ? "grade-flash-know" : "grade-flash-dontknow");
+
+    flashcardQueue.shift();
+    if (knowsIt) {
+      flashcardMastered++;
+    } else {
+      flashcardQueue.push(currentFlashcard);
+    }
+
+    setTimeout(() => {
+      el.classList.remove("grade-flash-know", "grade-flash-dontknow");
+      showNextFlashcard();
+    }, 260);
+  }
+
+  function showNextFlashcard() {
+    const el = document.getElementById("flashcard-el");
+    const doneEl = document.getElementById("flashcard-done");
+    const hintEl = document.getElementById("flashcard-hint");
+    const gradeRowEl = document.getElementById("flashcard-grade-row");
+    const fillEl = document.getElementById("flashcard-progress-fill");
+    const progressEl = document.getElementById("flashcard-progress");
+
+    const total = currentFlashcards.length;
+    fillEl.style.width = total > 0 ? `${Math.round((flashcardMastered / total) * 100)}%` : "0%";
+    progressEl.textContent = `${flashcardMastered} / ${total} mastered`;
+
+    if (flashcardQueue.length === 0) {
+      currentFlashcard = null;
+      el.hidden = true;
+      hintEl.hidden = true;
+      gradeRowEl.hidden = true;
+      doneEl.hidden = false;
+      document.getElementById("flashcard-done-sub").textContent =
+        total === 1 ? "You knew the card." : `You knew all ${total} cards.`;
+      return;
+    }
+
+    el.hidden = false;
+    hintEl.hidden = false;
+    doneEl.hidden = true;
+    currentFlashcard = flashcardQueue[0];
+    el.classList.remove("flipped");
+    gradeRowEl.hidden = true;
+    hintEl.textContent = "Tap the card to reveal the answer";
+    document.getElementById("flashcard-question").textContent = currentFlashcard.question;
+    document.getElementById("flashcard-answer").textContent = currentFlashcard.answer;
+  }
+
+  function startFlashcardRound() {
+    flashcardQueue = shuffleArray(currentFlashcards);
+    flashcardMastered = 0;
+    showNextFlashcard();
   }
 
   async function renderFlashcards() {
     const { data } = await sb.from("study_flashcards").select("*").eq("test_id", currentStudyTest.id).order("created_at");
     currentFlashcards = data || [];
-    currentFlashcardIndex = 0;
     const emptyEl = document.getElementById("flashcards-empty");
     const viewerEl = document.getElementById("flashcard-viewer");
     if (currentFlashcards.length === 0) {
@@ -4077,7 +4271,7 @@
     }
     emptyEl.hidden = true;
     viewerEl.hidden = false;
-    showFlashcard();
+    startFlashcardRound();
   }
 
   function initStudySchedule() {
