@@ -4195,8 +4195,17 @@
           <span class="entry-title">Notes from ${formatDate(n.created_at.slice(0, 10))}</span>
           <span class="entry-meta">${escapeHtml(preview)}</span>
         </div>
+        <button class="delete-btn" data-id="${n.id}" aria-label="Delete notes" title="Delete">✕</button>
       `;
       listEl.appendChild(li);
+    });
+    listEl.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (confirm("Delete these notes? This won't remove flashcards already generated from them.")) {
+          await sb.from("study_notes").delete().eq("id", btn.dataset.id);
+          await renderStudyNotesList();
+        }
+      });
     });
   }
 
