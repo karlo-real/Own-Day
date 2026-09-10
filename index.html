@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Own Day</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon-32.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#fbf7ef">
+<meta name="theme-color" content="#1b1815" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Own Day">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
   :root {
@@ -185,6 +193,7 @@
   }
 
   .nav-link {
+    position: relative;
     padding: 8px 16px;
     border-radius: 999px;
     font-size: 13px;
@@ -196,6 +205,19 @@
   }
 
   .nav-link:hover { background: var(--surface); color: var(--ink); }
+
+  .nav-badge-dot {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--bad);
+  }
+
+  .bottom-nav-icon-wrap { position: relative; display: inline-flex; }
+  .bottom-nav-icon-wrap .nav-badge-dot { top: -2px; right: -5px; }
 
   .nav-link.active {
     background: var(--surface-2);
@@ -842,17 +864,6 @@
   .exercise-sets { color: var(--ink-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
   /* ---- Auth ---- */
-  #loading-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ink-dim);
-    font-family: "Bebas Neue", sans-serif;
-    letter-spacing: 0.05em;
-    font-size: 18px;
-  }
-
   .auth-wrap {
     min-height: 100vh;
     display: flex;
@@ -888,9 +899,30 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    color: #fff;
     box-shadow: 0 10px 22px -8px rgba(255, 122, 80, 0.55);
     margin-bottom: 12px;
+  }
+
+  .auth-brand-mark svg { width: 30px; height: 30px; }
+
+  #loading-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ground);
+  }
+
+  .boot-pulse { animation: bootPulse 1.6s ease-in-out infinite; margin-bottom: 0; }
+
+  @keyframes bootPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.92); opacity: 0.72; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .boot-pulse { animation: none; }
   }
 
   .auth-heading {
@@ -1192,6 +1224,38 @@
 
   .home-priority-arrow { font-size: 18px; color: var(--ink-faint); flex-shrink: 0; }
 
+  /* ---- Weekly recap ---- */
+  .weekly-recap-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 16px;
+  }
+
+  .weekly-recap-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+  }
+
+  .weekly-recap-stat-icon { font-size: 20px; margin-bottom: 2px; }
+
+  .weekly-recap-stat-value {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 24px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+
+  .weekly-recap-stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
   /* ---- Streak ---- */
   .streak-badge {
     display: inline-flex;
@@ -1393,6 +1457,14 @@
   }
 
   .toast.toast-show { opacity: 1; transform: translateY(0); }
+
+  .toast-error {
+    white-space: normal;
+    max-width: min(360px, calc(100vw - 40px));
+    text-align: center;
+    background: color-mix(in srgb, var(--bad) 14%, var(--surface));
+    border-color: var(--bad);
+  }
 
   /* ---- Confetti ---- */
   .confetti-burst {
@@ -1642,6 +1714,25 @@
     letter-spacing: 0.03em;
   }
 
+  .trend-range-toggle { display: flex; gap: 4px; }
+
+  .trend-range-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-dim);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    padding: 4px 9px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .trend-range-btn:hover { background: var(--ground); }
+
+  .trend-range-btn.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
   /* ---- Study focus timer ---- */
   .timer-display {
     font-size: 56px;
@@ -1766,13 +1857,15 @@
 
 <div id="toast-container"></div>
 
-<div id="loading-screen">Loading…</div>
+<div id="loading-screen">
+  <span class="auth-brand-mark boot-pulse" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="3.8"/><line x1="12" y1="20.2" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="3.8" y2="12"/><line x1="20.2" y1="12" x2="22.5" y2="12"/><line x1="4.4" y1="4.4" x2="6" y2="6"/><line x1="18" y1="18" x2="19.6" y2="19.6"/><line x1="4.4" y1="19.6" x2="6" y2="18"/><line x1="18" y1="6" x2="19.6" y2="4.4"/></g></svg></span>
+</div>
 
 <div id="auth-screen" hidden>
   <div class="auth-wrap">
     <div class="auth-card">
       <div class="auth-brand">
-        <span class="auth-brand-mark">☀️</span>
+        <span class="auth-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="3.8"/><line x1="12" y1="20.2" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="3.8" y2="12"/><line x1="20.2" y1="12" x2="22.5" y2="12"/><line x1="4.4" y1="4.4" x2="6" y2="6"/><line x1="18" y1="18" x2="19.6" y2="19.6"/><line x1="4.4" y1="19.6" x2="6" y2="18"/><line x1="18" y1="6" x2="19.6" y2="4.4"/></g></svg></span>
         <h1 class="auth-heading">Own Day</h1>
         <p class="auth-tagline">Your day, all in one place.</p>
       </div>
@@ -1878,7 +1971,7 @@
         <a href="#/calories" class="nav-link" data-route="calories">Calories</a>
         <a href="#/sleep" class="nav-link" data-route="sleep">Sleep</a>
         <a href="#/study" class="nav-link" data-route="study">Study</a>
-        <a href="#/friends" class="nav-link" data-route="friends">Friends</a>
+        <a href="#/friends" class="nav-link" data-route="friends">Friends<span class="nav-badge-dot" data-friend-badge hidden></span></a>
         <a href="#/admin" class="nav-link" data-route="admin" id="nav-admin-link" hidden>Admin</a>
       </nav>
       <div class="profile-menu" id="profile-menu">
@@ -1907,7 +2000,7 @@
   <a href="#/calories" class="bottom-nav-link" data-route="calories"><span class="bottom-nav-icon">🍎</span><span class="bottom-nav-label">Calories</span></a>
   <a href="#/sleep" class="bottom-nav-link" data-route="sleep"><span class="bottom-nav-icon">🌙</span><span class="bottom-nav-label">Sleep</span></a>
   <a href="#/study" class="bottom-nav-link" data-route="study"><span class="bottom-nav-icon">📚</span><span class="bottom-nav-label">Study</span></a>
-  <a href="#/friends" class="bottom-nav-link" data-route="friends"><span class="bottom-nav-icon">👥</span><span class="bottom-nav-label">Friends</span></a>
+  <a href="#/friends" class="bottom-nav-link" data-route="friends"><span class="bottom-nav-icon-wrap"><span class="bottom-nav-icon">👥</span><span class="nav-badge-dot" data-friend-badge hidden></span></span><span class="bottom-nav-label">Friends</span></a>
   <a href="#/admin" class="bottom-nav-link" data-route="admin" hidden><span class="bottom-nav-icon">🛠️</span><span class="bottom-nav-label">Admin</span></a>
 </nav>
 
@@ -1979,6 +2072,16 @@
       </span>
       <span class="home-priority-arrow">→</span>
     </a>
+
+    <section class="panel" id="weekly-recap-card" hidden style="margin-bottom:24px;">
+      <div class="panel-header">
+        <span>📅 Your week in review</span>
+        <button type="button" class="modal-close-btn" id="weekly-recap-close-btn" aria-label="Dismiss">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="weekly-recap-stats" id="weekly-recap-stats"></div>
+      </div>
+    </section>
 
     <div class="tile-grid">
       <a href="#/fitness" class="tile card-fitness">
@@ -2099,7 +2202,14 @@
 
       <div class="section-tab-panel" data-section-panel="overview">
         <section class="panel">
-          <div class="panel-header">Last 7 days</div>
+          <div class="panel-header">
+            <span id="sleep-trend-title">Last 7 days</span>
+            <div class="trend-range-toggle" data-trend-toggle="sleep">
+              <button type="button" class="trend-range-btn active" data-range="7">7D</button>
+              <button type="button" class="trend-range-btn" data-range="30">30D</button>
+              <button type="button" class="trend-range-btn" data-range="90">90D</button>
+            </div>
+          </div>
           <div class="panel-body">
             <div id="sleep-trend-chart"></div>
           </div>
@@ -2222,7 +2332,14 @@
           </section>
 
           <section class="panel">
-            <div class="panel-header">Last 7 days</div>
+            <div class="panel-header">
+              <span id="study-trend-title">Last 7 days</span>
+              <div class="trend-range-toggle" data-trend-toggle="study">
+                <button type="button" class="trend-range-btn active" data-range="7">7D</button>
+                <button type="button" class="trend-range-btn" data-range="30">30D</button>
+                <button type="button" class="trend-range-btn" data-range="90">90D</button>
+              </div>
+            </div>
             <div class="panel-body">
               <div id="study-trend-chart"></div>
             </div>
@@ -2406,7 +2523,14 @@
 
       <div class="section-tab-panel" data-section-panel="overview">
         <section class="panel">
-          <div class="panel-header">Last 7 days</div>
+          <div class="panel-header">
+            <span id="fitness-trend-title">Last 7 days</span>
+            <div class="trend-range-toggle" data-trend-toggle="fitness">
+              <button type="button" class="trend-range-btn active" data-range="7">7D</button>
+              <button type="button" class="trend-range-btn" data-range="30">30D</button>
+              <button type="button" class="trend-range-btn" data-range="90">90D</button>
+            </div>
+          </div>
           <div class="panel-body">
             <div id="fitness-trend-chart"></div>
           </div>
@@ -2544,7 +2668,14 @@
 
         <div class="section-tab-panel" data-section-panel="overview">
           <section class="panel accent-food">
-            <div class="panel-header">Last 7 days</div>
+            <div class="panel-header">
+              <span id="calories-trend-title">Last 7 days</span>
+              <div class="trend-range-toggle" data-trend-toggle="calories">
+                <button type="button" class="trend-range-btn active" data-range="7">7D</button>
+                <button type="button" class="trend-range-btn" data-range="30">30D</button>
+                <button type="button" class="trend-range-btn" data-range="90">90D</button>
+              </div>
+            </div>
             <div class="panel-body">
               <div id="calories-trend-chart"></div>
             </div>
@@ -3061,9 +3192,9 @@
   }
 
   // ---- 7-day trend charts ----
-  function last7Dates() {
+  function lastNDates(n) {
     const dates = [];
-    for (let i = 6; i >= 0; i--) {
+    for (let i = n - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       dates.push(toISO(d));
@@ -3071,8 +3202,40 @@
     return dates;
   }
 
+  // Range state for each trend chart's day toggle (7/30/90), remembered per section for the session.
+  const trendRangeDays = { fitness: 7, calories: 7, sleep: 7, study: 7 };
+  // Caches the last target value passed in, so the range toggle can re-render without re-fetching it.
+  const _trendTargetCache = { calories: 0, sleep: 0 };
+
   function trendDayLabels(dates) {
-    return dates.map((d) => parseLocalDate(d).toLocaleDateString(undefined, { weekday: "narrow" }));
+    const n = dates.length;
+    if (n <= 7) {
+      return dates.map((d) => parseLocalDate(d).toLocaleDateString(undefined, { weekday: "narrow" }));
+    }
+    const step = n <= 30 ? 5 : 15;
+    return dates.map((d, i) => {
+      if (i % step !== 0 && i !== n - 1) return "";
+      return parseLocalDate(d).toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
+    });
+  }
+
+  function initTrendRangeToggles() {
+    document.querySelectorAll(".trend-range-toggle").forEach((toggle) => {
+      const section = toggle.dataset.trendToggle;
+      toggle.querySelectorAll(".trend-range-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const days = Number(btn.dataset.range);
+          trendRangeDays[section] = days;
+          toggle.querySelectorAll(".trend-range-btn").forEach((b) => b.classList.toggle("active", b === btn));
+          const titleEl = document.getElementById(`${section}-trend-title`);
+          if (titleEl) titleEl.textContent = days === 7 ? "Last 7 days" : `Last ${days} days`;
+          if (section === "fitness") renderFitnessTrend();
+          else if (section === "calories") renderCaloriesTrend(_trendTargetCache.calories);
+          else if (section === "sleep") renderSleepTrend(_trendTargetCache.sleep);
+          else if (section === "study") renderStudyTrend();
+        });
+      });
+    });
   }
 
   // Rounds a value up to a "nice" axis-friendly number (1/2/2.5/5/10 x a power of ten)
@@ -3113,15 +3276,16 @@
     }).join("");
 
     const labelsHtml = labels.map((l) => `<span class="trend-label">${escapeHtml(l)}</span>`).join("");
+    const gapPx = values.length > 45 ? 2 : values.length > 14 ? 4 : 8;
 
     const chartHtml = `
       <div class="trend-plot-row">
         <div class="trend-y-axis">${ticksHtml}</div>
-        <div class="trend-bars-row">${barsHtml}</div>
+        <div class="trend-bars-row" style="gap:${gapPx}px">${barsHtml}</div>
       </div>
       <div class="trend-labels-row">
         <div class="trend-y-axis-spacer"></div>
-        <div class="trend-labels">${labelsHtml}</div>
+        <div class="trend-labels" style="gap:${gapPx}px">${labelsHtml}</div>
       </div>
     `;
     const statsHtml = stats && stats.length
@@ -3131,7 +3295,8 @@
   }
 
   function renderFitnessTrend() {
-    const dates = last7Dates();
+    const days = trendRangeDays.fitness;
+    const dates = lastNDates(days);
     const labels = trendDayLabels(dates);
     const weekWorkouts = getWorkouts().filter((w) => dates.includes(w.date));
     // Bar height = how many exercises were logged that day, so a bigger day makes a taller bar.
@@ -3143,14 +3308,16 @@
       barClassFn: (v) => (v > 0 ? "trend-bar-hit" : "trend-bar-miss"),
       tickFormat: (n) => String(Math.round(n)),
       stats: [
-        { value: `${daysActive}/7`, label: "Workout days" },
+        { value: `${daysActive}/${days}`, label: "Workout days" },
         { value: weekWorkouts.length, label: "Exercises logged" },
       ],
     });
   }
 
   function renderCaloriesTrend(targetCalories) {
-    const dates = last7Dates();
+    _trendTargetCache.calories = targetCalories;
+    const days = trendRangeDays.calories;
+    const dates = lastNDates(days);
     const labels = trendDayLabels(dates);
     const food = getFood();
     const values = dates.map((d) => food.filter((f) => f.date === d).reduce((s, f) => s + f.calories, 0));
@@ -3172,14 +3339,16 @@
       },
       stats: [
         { value: `${avgCals.toLocaleString()}`, label: "Avg kcal/day" },
-        { value: `${onTargetDays}/7`, label: "Days on target" },
-        { value: `${totalWeek.toLocaleString()}`, label: "Total this week" },
+        { value: `${onTargetDays}/${days}`, label: "Days on target" },
+        { value: `${totalWeek.toLocaleString()}`, label: days === 7 ? "Total this week" : `Total (${days}d)` },
       ],
     });
   }
 
   async function renderSleepTrend(targetHours) {
-    const dates = last7Dates();
+    _trendTargetCache.sleep = targetHours;
+    const days = trendRangeDays.sleep;
+    const dates = lastNDates(days);
     const labels = trendDayLabels(dates);
     let logs = [];
     try { logs = await getSleepLogs(); } catch (e) {}
@@ -3202,14 +3371,15 @@
       },
       stats: [
         { value: `${avgHours.toFixed(1)}h`, label: "Avg per night" },
-        { value: `${loggedValues.length}/7`, label: "Nights logged" },
+        { value: `${loggedValues.length}/${days}`, label: "Nights logged" },
         { value: `${bestNight}h`, label: "Best night" },
       ],
     });
   }
 
   async function renderStudyTrend() {
-    const dates = last7Dates();
+    const days = trendRangeDays.study;
+    const dates = lastNDates(days);
     const labels = trendDayLabels(dates);
     let noteDates = [];
     let quizDates = [];
@@ -3241,7 +3411,7 @@
       formatValue: (v, i) => (v ? `${v} min studied` : "Nothing logged"),
       barClassFn: (v) => (v > 0 ? "trend-bar-hit" : "trend-bar-miss"),
       stats: [
-        { value: `${daysActive}/7`, label: "Active days" },
+        { value: `${daysActive}/${days}`, label: "Active days" },
         { value: formatDurationLong(totalWeekSeconds), label: "Time studied" },
         { value: weekNotes, label: "Notes uploaded" },
         { value: weekQuizzes, label: "Quizzes done" },
@@ -3357,11 +3527,11 @@
   }
 
   // ---- Toast ----
-  function showToast(message) {
+  function showToast(message, isError) {
     const container = document.getElementById("toast-container");
     if (!container) return;
     const toast = document.createElement("div");
-    toast.className = "toast";
+    toast.className = isError ? "toast toast-error" : "toast";
     toast.textContent = message;
     container.appendChild(toast);
     requestAnimationFrame(() => {
@@ -3370,7 +3540,7 @@
     setTimeout(() => {
       toast.classList.remove("toast-show");
       setTimeout(() => toast.remove(), 300);
-    }, 3200);
+    }, isError ? 5000 : 3200);
   }
 
   // ---- Confetti ----
@@ -4299,6 +4469,8 @@
     checkDailyGoalsCelebration();
     checkBadges();
     refreshHomePriorityCard();
+    refreshFriendRequestBadge();
+    refreshWeeklyRecap();
   }
 
   // ---- Home priority card (what most needs attention today) ----
@@ -4366,6 +4538,75 @@
     document.getElementById("home-priority-icon").textContent = p.icon;
     document.getElementById("home-priority-title").textContent = p.title;
     document.getElementById("home-priority-sub").textContent = p.sub;
+  }
+
+  // ---- Weekly recap ----
+  function getWeekKey(d = new Date()) {
+    // Monday-starting week, identified by that Monday's date.
+    const dayIdx = (d.getDay() + 6) % 7; // 0 = Monday ... 6 = Sunday
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - dayIdx);
+    return toISO(monday);
+  }
+
+  function weeklyRecapStatHtml(icon, value, label) {
+    return `<div class="weekly-recap-stat">
+      <span class="weekly-recap-stat-icon">${icon}</span>
+      <span class="weekly-recap-stat-value">${escapeHtml(String(value))}</span>
+      <span class="weekly-recap-stat-label">${escapeHtml(label)}</span>
+    </div>`;
+  }
+
+  function initWeeklyRecap() {
+    const closeBtn = document.getElementById("weekly-recap-close-btn");
+    if (!closeBtn) return;
+    closeBtn.addEventListener("click", () => {
+      document.getElementById("weekly-recap-card").hidden = true;
+      try { localStorage.setItem(storageKey("recapDismissedWeek"), getWeekKey()); } catch (e) {}
+    });
+  }
+
+  async function refreshWeeklyRecap() {
+    const card = document.getElementById("weekly-recap-card");
+    if (!card || !currentUser) return;
+    const weekKey = getWeekKey();
+    let dismissed = null;
+    try { dismissed = localStorage.getItem(storageKey("recapDismissedWeek")); } catch (e) {}
+    if (dismissed === weekKey) { card.hidden = true; return; }
+
+    const dates = lastNDates(7);
+    const weekWorkouts = getWorkouts().filter((w) => dates.includes(w.date));
+    const weekFood = getFood().filter((f) => dates.includes(f.date));
+    let sleepLogs = [];
+    try { sleepLogs = await getSleepLogs(); } catch (e) {}
+    const weekSleep = sleepLogs.filter((l) => dates.includes(l.date));
+    let studySessionsCount = 0;
+    try {
+      const { data: sessions } = await sb.from("study_sessions").select("started_at").eq("user_id", currentUser.id);
+      studySessionsCount = (sessions || []).filter((s) => dates.includes(s.started_at.slice(0, 10))).length;
+    } catch (e) {}
+
+    const hasAnyActivity = weekWorkouts.length || weekFood.length || weekSleep.length || studySessionsCount;
+    if (!hasAnyActivity) { card.hidden = true; return; }
+
+    const foodByDate = {};
+    weekFood.forEach((f) => { foodByDate[f.date] = (foodByDate[f.date] || 0) + f.calories; });
+    const loggedCalDays = Object.values(foodByDate);
+    const avgCals = loggedCalDays.length ? Math.round(loggedCalDays.reduce((a, b) => a + b, 0) / loggedCalDays.length) : 0;
+
+    const sleepHoursLogged = weekSleep.map((l) => l.hours).filter((h) => h > 0);
+    const avgSleep = sleepHoursLogged.length ? sleepHoursLogged.reduce((a, b) => a + b, 0) / sleepHoursLogged.length : 0;
+
+    const streak = await computeStreak();
+
+    document.getElementById("weekly-recap-stats").innerHTML = [
+      weeklyRecapStatHtml("🔥", streak, "day streak"),
+      weeklyRecapStatHtml("🏋️", weekWorkouts.length, "exercises logged"),
+      weeklyRecapStatHtml("🍎", avgCals ? avgCals.toLocaleString() : "—", "avg kcal/day"),
+      weeklyRecapStatHtml("🌙", avgSleep ? `${avgSleep.toFixed(1)}h` : "—", "avg sleep/night"),
+      weeklyRecapStatHtml("📚", studySessionsCount, "study sessions"),
+    ].join("");
+    card.hidden = false;
   }
 
   // ---- Friends ----
@@ -4526,6 +4767,22 @@
     });
   }
 
+  function updateFriendBadge(count) {
+    document.querySelectorAll("[data-friend-badge]").forEach((el) => {
+      el.hidden = count === 0;
+    });
+  }
+
+  async function refreshFriendRequestBadge() {
+    if (!currentUser) return;
+    const { data } = await sb
+      .from("friend_requests")
+      .select("id")
+      .eq("recipient_id", currentUser.id)
+      .eq("status", "pending");
+    updateFriendBadge((data || []).length);
+  }
+
   async function loadFriendData() {
     const incomingListEl = document.getElementById("incoming-requests-list");
     const friendsListEl = document.getElementById("friends-list");
@@ -4560,6 +4817,7 @@
 
     renderIncomingRequests(incoming, profilesById);
     renderFriendsList(accepted, profilesById, summaryById);
+    updateFriendBadge(incoming.length);
   }
 
   function renderIncomingRequests(incoming, profilesById) {
@@ -4720,7 +4978,7 @@
       const testDate = document.getElementById("study-ob-date").value;
       if (!subject || !testDate) return;
       const { error } = await sb.from("study_tests").insert({ user_id: currentUser.id, subject, test_date: testDate });
-      if (error) { alert("Something went wrong — please try again."); return; }
+      if (error) { showToast("❌ Something went wrong — please try again.", true); return; }
       await renderStudySection();
     });
 
@@ -4806,7 +5064,7 @@
         await callStudyAI({ action: "generate_flashcards", test_id: currentStudyTest.id });
         await renderFlashcards();
       } catch (err) {
-        alert("Couldn't generate flashcards: " + err.message);
+        showToast("❌ Couldn't generate flashcards: " + err.message, true);
       }
       btn.disabled = false;
       btn.textContent = "Generate flashcards ✨";
@@ -5086,7 +5344,7 @@
         currentStudyTest.schedule = result.schedule;
         renderSchedule(result.schedule);
       } catch (err) {
-        alert("Couldn't generate a schedule: " + err.message);
+        showToast("❌ Couldn't generate a schedule: " + err.message, true);
       }
       btn.disabled = false;
       btn.textContent = "Generate schedule 🗓️";
@@ -5145,7 +5403,7 @@
         document.getElementById("quiz-taking-view").hidden = true;
         currentQuiz = null;
       } catch (err) {
-        alert("Couldn't grade the quiz: " + err.message);
+        showToast("❌ Couldn't grade the quiz: " + err.message, true);
       }
       submitBtn.disabled = false;
       submitBtn.textContent = "Submit answers";
@@ -5797,10 +6055,23 @@
     initSectionTabs();
     initProfileMenu();
     initEditProfileModal();
+    initTrendRangeToggles();
+    initWeeklyRecap();
     initThemeToggle();
     setSplit("gym");
     initSupabaseAuth();
   });
+</script>
+
+<script>
+  // Service worker registration lives in its own script, independent of the
+  // main app script above, so installability isn't affected by anything
+  // that happens during app boot.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
 </script>
 
 </body>
