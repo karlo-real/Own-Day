@@ -522,7 +522,7 @@
     margin-bottom: 6px;
   }
 
-  .field input, .field select {
+  .field input, .field select, .field textarea {
     width: 100%;
     background: var(--ground);
     border: 1px solid var(--border);
@@ -530,9 +530,12 @@
     padding: 10px 12px;
     color: var(--ink);
     font-size: 14px;
+    font-family: inherit;
   }
 
-  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 72px; }
+
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
 
   .password-field { position: relative; display: flex; align-items: center; }
   .password-field input { width: 100%; padding-right: 44px; }
@@ -1436,6 +1439,48 @@
 
   .btn-accept:hover { filter: brightness(1.08); }
 
+  .btn-ban {
+    background: transparent;
+    border: 1px solid var(--bad);
+    color: var(--bad);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .btn-ban:hover { background: var(--bad); color: #fff; }
+
+  .btn-unban {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-dim);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .btn-unban:hover { color: var(--ink); border-color: var(--ink-dim); }
+
+  .ban-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--bad);
+  }
+
   /* ---- View transitions ---- */
   [data-view] { opacity: 1; transform: translateY(0); }
 
@@ -2081,6 +2126,37 @@
           </div>
         </div>
         <button type="submit" class="btn-submit" id="edit-password-submit-btn">Update password</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ban-user-overlay" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ban-user-title">
+    <div class="modal-header">
+      <h2 class="modal-title" id="ban-user-title">Ban user</h2>
+      <button type="button" class="modal-close-btn" id="ban-user-close-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="ban-user-message" class="auth-message" hidden></div>
+      <p class="plan-caption" style="margin:-6px 0 16px;">Banning <strong id="ban-user-name">—</strong></p>
+      <form id="ban-user-form" class="auth-form">
+        <div class="field">
+          <label for="ban-user-reason">Reason</label>
+          <textarea id="ban-user-reason" rows="3" required placeholder="Why is this person being banned?"></textarea>
+        </div>
+        <div class="field">
+          <label for="ban-user-duration">Duration</label>
+          <select id="ban-user-duration">
+            <option value="1h">1 hour</option>
+            <option value="1d">1 day</option>
+            <option value="3d">3 days</option>
+            <option value="7d" selected>7 days</option>
+            <option value="30d">30 days</option>
+            <option value="permanent">Permanent</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit" id="ban-user-submit-btn" style="background:var(--bad);">Ban user</button>
       </form>
     </div>
   </div>
@@ -6007,6 +6083,19 @@
   }
 
   async function handleAuthenticated(session) {
+    const activeBan = await getActiveBan(session.user.id);
+    if (activeBan) {
+      await sb.auth.signOut();
+      currentUser = null;
+      document.getElementById("loading-screen").hidden = true;
+      document.getElementById("app-screen").hidden = true;
+      document.getElementById("profile-setup-screen").hidden = true;
+      document.getElementById("auth-screen").hidden = false;
+      showAuthForm("signin");
+      showAuthMessage(formatBanMessage(activeBan), true);
+      return;
+    }
+
     currentUser = {
       id: session.user.id,
       email: session.user.email,
@@ -6036,6 +6125,104 @@
     refreshAll();
   }
 
+  // ---- Bans ----
+  const BAN_DURATIONS_MS = {
+    "1h": 60 * 60 * 1000,
+    "1d": 24 * 60 * 60 * 1000,
+    "3d": 3 * 24 * 60 * 60 * 1000,
+    "7d": 7 * 24 * 60 * 60 * 1000,
+    "30d": 30 * 24 * 60 * 60 * 1000,
+  };
+
+  function computeBanUntil(durationKey) {
+    const ms = BAN_DURATIONS_MS[durationKey];
+    if (!ms) return null; // "permanent" (or anything unrecognized) -> no expiry
+    return new Date(Date.now() + ms).toISOString();
+  }
+
+  function formatBanUntil(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) +
+      " at " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+
+  function formatBanMessage(ban) {
+    const untilText = ban.banned_until ? `until ${formatBanUntil(ban.banned_until)}` : "permanently";
+    return `Your account has been banned ${untilText}. Reason: ${ban.reason}`;
+  }
+
+  // Returns the current user's active ban row, or null if they aren't banned
+  // (or their ban has already expired).
+  async function getActiveBan(userId) {
+    const { data } = await sb.from("banned_users").select("reason, banned_until").eq("user_id", userId).maybeSingle();
+    if (!data) return null;
+    if (data.banned_until && new Date(data.banned_until) <= new Date()) return null;
+    return data;
+  }
+
+  let banModalTargetUserId = null;
+
+  function openBanModal(userId, name, existingReason) {
+    banModalTargetUserId = userId;
+    document.getElementById("ban-user-name").textContent = name;
+    document.getElementById("ban-user-reason").value = existingReason || "";
+    document.getElementById("ban-user-duration").value = "7d";
+    const messageEl = document.getElementById("ban-user-message");
+    messageEl.hidden = true;
+    messageEl.textContent = "";
+    document.getElementById("ban-user-overlay").hidden = false;
+    document.getElementById("ban-user-reason").focus();
+  }
+
+  function closeBanModal() {
+    document.getElementById("ban-user-overlay").hidden = true;
+    banModalTargetUserId = null;
+  }
+
+  function initBanUserModal() {
+    const overlay = document.getElementById("ban-user-overlay");
+    const closeBtn = document.getElementById("ban-user-close-btn");
+    const form = document.getElementById("ban-user-form");
+    if (!overlay || !closeBtn || !form) return;
+
+    closeBtn.addEventListener("click", closeBanModal);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeBanModal(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.hidden) closeBanModal();
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const messageEl = document.getElementById("ban-user-message");
+      messageEl.hidden = true;
+      messageEl.textContent = "";
+      if (!banModalTargetUserId) return;
+      const reason = document.getElementById("ban-user-reason").value.trim();
+      if (!reason) {
+        messageEl.textContent = "Please give a reason for the ban.";
+        messageEl.hidden = false;
+        return;
+      }
+      const duration = document.getElementById("ban-user-duration").value;
+      const bannedUntil = computeBanUntil(duration);
+      const submitBtn = document.getElementById("ban-user-submit-btn");
+      submitBtn.disabled = true;
+      const { error } = await sb.from("banned_users").upsert(
+        { user_id: banModalTargetUserId, reason, banned_until: bannedUntil, banned_by: currentUser.id },
+        { onConflict: "user_id" }
+      );
+      submitBtn.disabled = false;
+      if (error) {
+        messageEl.textContent = "Something went wrong — please try again.";
+        messageEl.hidden = false;
+        return;
+      }
+      closeBanModal();
+      showToast("🚫 User banned.", false);
+      renderAdminSection();
+    });
+  }
+
   async function renderAdminSection() {
     const listEl = document.getElementById("admin-user-list");
     const emptyEl = document.getElementById("admin-empty");
@@ -6051,22 +6238,68 @@
 
     listEl.innerHTML = skeletonListItems(3);
 
-    const { data, error } = await sb.from("profiles").select("name, email").order("name");
+    const [usersRes, bansRes] = await Promise.all([
+      sb.from("profiles").select("id, name, email").order("name"),
+      sb.from("banned_users").select("user_id, reason, banned_until"),
+    ]);
+    const users = usersRes.data;
     listEl.innerHTML = "";
-    if (error || !data || data.length === 0) {
+    if (usersRes.error || !users || users.length === 0) {
       emptyEl.hidden = false;
       return;
     }
-    data.forEach((u) => {
+
+    const bansById = {};
+    (bansRes.data || []).forEach((b) => { bansById[b.user_id] = b; });
+
+    users.forEach((u) => {
+      const ban = bansById[u.id];
+      const isActive = !!ban && (!ban.banned_until || new Date(ban.banned_until) > new Date());
+      const isSelf = u.id === currentUser.id;
+      const untilText = isActive && ban.banned_until ? `until ${formatBanUntil(ban.banned_until)}` : "permanently";
       const li = document.createElement("li");
       li.className = "entry-item";
       li.innerHTML = `
         <div class="entry-info">
           <span class="entry-title">${escapeHtml(u.name || "(no name)")}</span>
-          <span class="entry-meta">${escapeHtml(u.email)}</span>
+          <span class="entry-meta">${escapeHtml(u.email)}${isSelf ? " · you" : ""}</span>
+          ${isActive ? `<span class="ban-chip">🚫 Banned ${untilText} — ${escapeHtml(ban.reason)}</span>` : ""}
         </div>
+        ${isSelf ? "" : `
+        <div class="request-actions">
+          ${isActive
+            ? `<button type="button" class="btn-unban" data-edit-ban="${u.id}">Edit</button><button type="button" class="btn-unban" data-unban="${u.id}">Unban</button>`
+            : `<button type="button" class="btn-ban" data-ban="${u.id}">Ban</button>`}
+        </div>`}
       `;
       listEl.appendChild(li);
+    });
+
+    listEl.querySelectorAll("[data-ban]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const user = users.find((u) => u.id === btn.dataset.ban);
+        openBanModal(btn.dataset.ban, user ? (user.name || user.email) : "this user", "");
+      });
+    });
+    listEl.querySelectorAll("[data-edit-ban]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const user = users.find((u) => u.id === btn.dataset.editBan);
+        const ban = bansById[btn.dataset.editBan];
+        openBanModal(btn.dataset.editBan, user ? (user.name || user.email) : "this user", ban ? ban.reason : "");
+      });
+    });
+    listEl.querySelectorAll("[data-unban]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        const { error } = await sb.from("banned_users").delete().eq("user_id", btn.dataset.unban);
+        if (error) {
+          showToast("❌ Couldn't unban — please try again.", true);
+          btn.disabled = false;
+          return;
+        }
+        showToast("✅ User unbanned.", false);
+        renderAdminSection();
+      });
     });
   }
 
@@ -6117,6 +6350,7 @@
     initSectionTabs();
     initProfileMenu();
     initEditProfileModal();
+    initBanUserModal();
     initTrendRangeToggles();
     initWeeklyRecap();
     initThemeToggle();
