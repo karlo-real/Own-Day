@@ -939,8 +939,42 @@
     margin: 2px 0 0;
   }
 
-  .auth-tabs { width: 100%; margin-bottom: 22px; }
-  .auth-tabs .split-btn { flex: 1; }
+  .auth-tabs { width: 100%; margin-bottom: 22px; position: relative; }
+  .auth-tabs .split-btn { flex: 1; position: relative; z-index: 1; transition: color 0.25s ease; }
+
+  .auth-tabs::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+    height: calc(100% - 6px);
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 3px 10px -4px rgba(40, 30, 15, 0.4);
+    transition: transform 0.32s cubic-bezier(0.65, 0, 0.35, 1);
+    z-index: 0;
+  }
+
+  .auth-tabs[data-active="signup"]::before { transform: translateX(100%); }
+
+  .auth-tabs .split-btn.active { background: transparent; }
+
+  .auth-form-stage {
+    overflow: hidden;
+  }
+
+  .auth-form { animation: authFormIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  @keyframes authFormIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .auth-tabs::before { transition: none; }
+    .auth-form { animation: none; }
+  }
 
   .auth-back-link {
     display: inline-flex;
@@ -1872,11 +1906,12 @@
 
       <div id="auth-message" class="auth-message" hidden></div>
 
-      <div class="split-toggle auth-tabs" id="auth-tabs">
+      <div class="split-toggle auth-tabs" id="auth-tabs" data-active="signin">
         <button type="button" class="split-btn active" id="auth-tab-signin">Sign in</button>
         <button type="button" class="split-btn" id="auth-tab-signup">Sign up</button>
       </div>
 
+      <div class="auth-form-stage" id="auth-form-stage">
       <form id="signin-form" class="auth-form">
         <div class="field">
           <label for="signin-email">Email</label>
@@ -1928,6 +1963,7 @@
         <button type="submit" class="btn-submit btn-onboard">Verify</button>
         <p class="auth-switch"><a href="#" id="resend-code">Resend code</a></p>
       </form>
+      </div>
     </div>
   </div>
 </div>
@@ -5814,16 +5850,42 @@
 
   function showAuthForm(which) {
     clearAuthMessage();
+    const stage = document.getElementById("auth-form-stage");
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let startHeight = 0;
+    if (stage && !reduceMotion) {
+      startHeight = stage.offsetHeight;
+      stage.style.height = startHeight + "px";
+    }
+
     document.getElementById("signin-form").hidden = which !== "signin";
     document.getElementById("signup-form").hidden = which !== "signup";
     document.getElementById("verify-form").hidden = which !== "verify";
     const tabs = document.getElementById("auth-tabs");
-    if (tabs) tabs.hidden = which === "verify";
+    if (tabs) {
+      tabs.hidden = which === "verify";
+      if (which === "signin" || which === "signup") tabs.dataset.active = which;
+    }
     const signinTab = document.getElementById("auth-tab-signin");
     const signupTab = document.getElementById("auth-tab-signup");
     if (signinTab && signupTab) {
       signinTab.classList.toggle("active", which === "signin");
       signupTab.classList.toggle("active", which === "signup");
+    }
+
+    if (stage && !reduceMotion) {
+      const endHeight = stage.scrollHeight;
+      // Force a reflow so the browser commits the locked starting height
+      // before we animate to the new one -- otherwise both changes collapse
+      // into a single paint and the height just jumps instead of easing.
+      void stage.offsetHeight;
+      stage.style.transition = "height 0.32s cubic-bezier(0.65, 0, 0.35, 1)";
+      stage.style.height = endHeight + "px";
+      window.clearTimeout(stage._authMorphTimer);
+      stage._authMorphTimer = window.setTimeout(() => {
+        stage.style.transition = "";
+        stage.style.height = "";
+      }, 340);
     }
   }
 
