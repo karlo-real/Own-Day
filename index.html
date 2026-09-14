@@ -537,6 +537,28 @@
 
   .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
 
+  .field-checkbox { display: flex; align-items: center; gap: 8px; }
+
+  .field-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    padding: 0;
+    border-radius: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .field-checkbox label {
+    margin: 0;
+    text-transform: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: normal;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
   .password-field { position: relative; display: flex; align-items: center; }
   .password-field input { width: 100%; padding-right: 44px; }
 
@@ -1027,6 +1049,33 @@
   }
 
   .auth-switch a { color: var(--accent-home); font-weight: 700; }
+
+  /* ---- Present ban ---- */
+  .present-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+  }
+
+  .present-gift-icon {
+    font-size: 60px;
+    line-height: 1;
+    margin-bottom: 10px;
+    animation: presentBounce 1.6s ease-in-out infinite;
+  }
+
+  .present-gift-icon-open { animation: none; }
+
+  @keyframes presentBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(-4deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .present-gift-icon { animation: none; }
+  }
 
   .nav-group {
     display: flex;
@@ -2040,6 +2089,25 @@
   </div>
 </div>
 
+<div id="present-ban-screen" hidden>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div id="present-ban-closed" class="present-stage">
+        <span class="present-gift-icon" aria-hidden="true">🎁</span>
+        <h1 class="auth-heading">You've got a Present!</h1>
+        <p class="auth-tagline">Someone left something for you. Go ahead, open it.</p>
+        <button type="button" class="btn-submit btn-onboard" id="present-ban-open-btn" style="margin-top:18px;">Open Present</button>
+      </div>
+      <div id="present-ban-opened" class="present-stage" hidden>
+        <span class="present-gift-icon present-gift-icon-open" aria-hidden="true">🎁</span>
+        <h1 class="auth-heading">Surprise — you've been banned</h1>
+        <div id="present-ban-message" class="auth-message" style="text-align:left; margin-top:14px; width:100%;"></div>
+        <button type="button" class="btn-submit btn-onboard" id="present-ban-back-btn" style="margin-top:4px;">Back to sign in</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="app-screen" hidden>
 
 <header class="topbar">
@@ -2155,6 +2223,10 @@
             <option value="30d">30 days</option>
             <option value="permanent">Permanent</option>
           </select>
+        </div>
+        <div class="field field-checkbox">
+          <input type="checkbox" id="ban-user-present">
+          <label for="ban-user-present">🎁 Present ban — they'll see "You've got a Present!" and have to open it to find out why</label>
         </div>
         <button type="submit" class="btn-submit" id="ban-user-submit-btn" style="background:var(--bad);">Ban user</button>
       </form>
@@ -6090,9 +6162,14 @@
       document.getElementById("loading-screen").hidden = true;
       document.getElementById("app-screen").hidden = true;
       document.getElementById("profile-setup-screen").hidden = true;
-      document.getElementById("auth-screen").hidden = false;
-      showAuthForm("signin");
-      showAuthMessage(formatBanMessage(activeBan), true);
+      if (activeBan.is_present) {
+        document.getElementById("auth-screen").hidden = true;
+        showPresentBanScreen(activeBan);
+      } else {
+        document.getElementById("auth-screen").hidden = false;
+        showAuthForm("signin");
+        showAuthMessage(formatBanMessage(activeBan), true);
+      }
       return;
     }
 
@@ -6151,10 +6228,32 @@
     return `Your account has been banned ${untilText}. Reason: ${ban.reason}`;
   }
 
+  function showPresentBanScreen(ban) {
+    document.getElementById("present-ban-closed").hidden = false;
+    document.getElementById("present-ban-opened").hidden = true;
+    document.getElementById("present-ban-message").textContent = formatBanMessage(ban);
+    document.getElementById("present-ban-screen").hidden = false;
+  }
+
+  function initPresentBanScreen() {
+    const openBtn = document.getElementById("present-ban-open-btn");
+    const backBtn = document.getElementById("present-ban-back-btn");
+    if (!openBtn || !backBtn) return;
+    openBtn.addEventListener("click", () => {
+      document.getElementById("present-ban-closed").hidden = true;
+      document.getElementById("present-ban-opened").hidden = false;
+    });
+    backBtn.addEventListener("click", () => {
+      document.getElementById("present-ban-screen").hidden = true;
+      document.getElementById("auth-screen").hidden = false;
+      showAuthForm("signin");
+    });
+  }
+
   // Returns the current user's active ban row, or null if they aren't banned
   // (or their ban has already expired).
   async function getActiveBan(userId) {
-    const { data } = await sb.from("banned_users").select("reason, banned_until").eq("user_id", userId).maybeSingle();
+    const { data } = await sb.from("banned_users").select("reason, banned_until, is_present").eq("user_id", userId).maybeSingle();
     if (!data) return null;
     if (data.banned_until && new Date(data.banned_until) <= new Date()) return null;
     return data;
@@ -6162,11 +6261,12 @@
 
   let banModalTargetUserId = null;
 
-  function openBanModal(userId, name, existingReason) {
+  function openBanModal(userId, name, existingReason, existingIsPresent) {
     banModalTargetUserId = userId;
     document.getElementById("ban-user-name").textContent = name;
     document.getElementById("ban-user-reason").value = existingReason || "";
     document.getElementById("ban-user-duration").value = "7d";
+    document.getElementById("ban-user-present").checked = !!existingIsPresent;
     const messageEl = document.getElementById("ban-user-message");
     messageEl.hidden = true;
     messageEl.textContent = "";
@@ -6205,10 +6305,11 @@
       }
       const duration = document.getElementById("ban-user-duration").value;
       const bannedUntil = computeBanUntil(duration);
+      const isPresent = document.getElementById("ban-user-present").checked;
       const submitBtn = document.getElementById("ban-user-submit-btn");
       submitBtn.disabled = true;
       const { error } = await sb.from("banned_users").upsert(
-        { user_id: banModalTargetUserId, reason, banned_until: bannedUntil, banned_by: currentUser.id },
+        { user_id: banModalTargetUserId, reason, banned_until: bannedUntil, banned_by: currentUser.id, is_present: isPresent },
         { onConflict: "user_id" }
       );
       submitBtn.disabled = false;
@@ -6218,7 +6319,7 @@
         return;
       }
       closeBanModal();
-      showToast("🚫 User banned.", false);
+      showToast(isPresent ? "🎁 User present-banned." : "🚫 User banned.", false);
       renderAdminSection();
     });
   }
@@ -6240,7 +6341,7 @@
 
     const [usersRes, bansRes] = await Promise.all([
       sb.from("profiles").select("id, name, email").order("name"),
-      sb.from("banned_users").select("user_id, reason, banned_until"),
+      sb.from("banned_users").select("user_id, reason, banned_until, is_present"),
     ]);
     const users = usersRes.data;
     listEl.innerHTML = "";
@@ -6263,7 +6364,7 @@
         <div class="entry-info">
           <span class="entry-title">${escapeHtml(u.name || "(no name)")}</span>
           <span class="entry-meta">${escapeHtml(u.email)}${isSelf ? " · you" : ""}</span>
-          ${isActive ? `<span class="ban-chip">🚫 Banned ${untilText} — ${escapeHtml(ban.reason)}</span>` : ""}
+          ${isActive ? `<span class="ban-chip">${ban.is_present ? "🎁 Present-banned" : "🚫 Banned"} ${untilText} — ${escapeHtml(ban.reason)}</span>` : ""}
         </div>
         ${isSelf ? "" : `
         <div class="request-actions">
@@ -6278,14 +6379,14 @@
     listEl.querySelectorAll("[data-ban]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const user = users.find((u) => u.id === btn.dataset.ban);
-        openBanModal(btn.dataset.ban, user ? (user.name || user.email) : "this user", "");
+        openBanModal(btn.dataset.ban, user ? (user.name || user.email) : "this user", "", false);
       });
     });
     listEl.querySelectorAll("[data-edit-ban]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const user = users.find((u) => u.id === btn.dataset.editBan);
         const ban = bansById[btn.dataset.editBan];
-        openBanModal(btn.dataset.editBan, user ? (user.name || user.email) : "this user", ban ? ban.reason : "");
+        openBanModal(btn.dataset.editBan, user ? (user.name || user.email) : "this user", ban ? ban.reason : "", ban ? ban.is_present : false);
       });
     });
     listEl.querySelectorAll("[data-unban]").forEach((btn) => {
@@ -6351,6 +6452,7 @@
     initProfileMenu();
     initEditProfileModal();
     initBanUserModal();
+    initPresentBanScreen();
     initTrendRangeToggles();
     initWeeklyRecap();
     initThemeToggle();
