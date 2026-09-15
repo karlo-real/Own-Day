@@ -2059,18 +2059,6 @@
         </div>
         <button type="submit" class="btn-submit btn-onboard">Create account</button>
       </form>
-
-      <form id="verify-form" class="auth-form" hidden>
-        <a href="#" class="auth-back-link" id="verify-back">← Back</a>
-        <h2 class="group-label" id="verify-title" style="margin-top:2px;">Enter your code</h2>
-        <p class="plan-caption" id="verify-subtitle">We sent a code to your email.</p>
-        <div class="field">
-          <label for="verify-code">Verification code</label>
-          <input type="text" id="verify-code" inputmode="numeric" autocomplete="one-time-code" required>
-        </div>
-        <button type="submit" class="btn-submit btn-onboard">Verify</button>
-        <p class="auth-switch"><a href="#" id="resend-code">Resend code</a></p>
-      </form>
       </div>
     </div>
   </div>
@@ -3094,8 +3082,6 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   let currentUser = null;
-  let pendingAuthEmail = null;
-  let pendingAuthMode = null;
   let editingProfile = false;
   let activeSplit = "gym";
   let bodyProfile = null;
@@ -6022,11 +6008,9 @@
 
     document.getElementById("signin-form").hidden = which !== "signin";
     document.getElementById("signup-form").hidden = which !== "signup";
-    document.getElementById("verify-form").hidden = which !== "verify";
     const tabs = document.getElementById("auth-tabs");
     if (tabs) {
-      tabs.hidden = which === "verify";
-      if (which === "signin" || which === "signup") tabs.dataset.active = which;
+      tabs.dataset.active = which;
     }
     const signinTab = document.getElementById("auth-tab-signin");
     const signupTab = document.getElementById("auth-tab-signup");
@@ -6071,13 +6055,6 @@
   function initAuthForms() {
     document.getElementById("auth-tab-signin").addEventListener("click", () => showAuthForm("signin"));
     document.getElementById("auth-tab-signup").addEventListener("click", () => showAuthForm("signup"));
-    document.getElementById("verify-back").addEventListener("click", (e) => {
-      e.preventDefault();
-      const backTo = pendingAuthMode === "signup" ? "signup" : "signin";
-      pendingAuthEmail = null;
-      pendingAuthMode = null;
-      showAuthForm(backTo);
-    });
 
     document.getElementById("signup-form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -6099,15 +6076,20 @@
         showAuthMessage("That name is already taken — try a different one.", true);
         return;
       }
-      const { error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
       submitBtn.disabled = false;
       if (error) { showAuthMessage(error.message, true); return; }
-      pendingAuthEmail = email;
-      pendingAuthMode = "signup";
-      document.getElementById("verify-code").value = "";
-      document.getElementById("verify-title").textContent = "Verify your email";
-      document.getElementById("verify-subtitle").textContent = `We sent a code to ${email}. Enter it below to activate your account.`;
-      showAuthForm("verify");
+      if (!data.session) {
+        // No session came back, which means the Supabase project still has
+        // "Confirm email" turned on and is waiting on a confirmation we no
+        // longer send a code for. Turn that setting off in the Supabase
+        // dashboard (Authentication -> Providers -> Email) so sign-up logs
+        // people in immediately, same as this app now expects.
+        showAuthMessage("Account created. Please sign in below.", false);
+        showAuthForm("signin");
+        return;
+      }
+      await handleAuthenticated(data.session);
     });
 
     document.getElementById("signin-form").addEventListener("submit", async (e) => {
@@ -6118,42 +6100,11 @@
       if (!email || !password) return;
       const submitBtn = e.target.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
-      // Sign-in is password-only -- the email code is only used once, to verify
-      // the address at signup. Sending a fresh code on every sign-in used to
-      // burn through Supabase's default email rate limit almost immediately.
+      // Sign-in is password-only -- no email code is ever sent.
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       submitBtn.disabled = false;
       if (error) { showAuthMessage(error.message, true); return; }
       await handleAuthenticated(data.session);
-    });
-
-    document.getElementById("verify-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      clearAuthMessage();
-      const code = document.getElementById("verify-code").value.trim();
-      if (!code || !pendingAuthEmail) return;
-      const submitBtn = e.target.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      const type = pendingAuthMode === "signup" ? "signup" : "email";
-      const { data, error } = await sb.auth.verifyOtp({ email: pendingAuthEmail, token: code, type });
-      submitBtn.disabled = false;
-      if (error) { showAuthMessage(error.message, true); return; }
-      document.getElementById("verify-code").value = "";
-      pendingAuthEmail = null;
-      pendingAuthMode = null;
-      await handleAuthenticated(data.session);
-    });
-
-    document.getElementById("resend-code").addEventListener("click", async (e) => {
-      e.preventDefault();
-      if (!pendingAuthEmail) return;
-      clearAuthMessage();
-      if (pendingAuthMode === "signup") {
-        await sb.auth.resend({ type: "signup", email: pendingAuthEmail });
-      } else {
-        await sb.auth.signInWithOtp({ email: pendingAuthEmail, options: { shouldCreateUser: false } });
-      }
-      showAuthMessage("A new code has been sent.", false);
     });
 
     document.getElementById("signout-btn").addEventListener("click", async () => {
