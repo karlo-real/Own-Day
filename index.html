@@ -32,6 +32,8 @@
     --accent-friends: #f2d038;
     --accent-study: #23aec9;
     --accent-admin: #d9527a;
+    --accent-habits: #3fa66d;
+    --accent-history: #a67c52;
     --good: #279155;
     --bad: #e0483f;
     --blob-opacity-mult: 1;
@@ -231,6 +233,8 @@
   .nav-link.active[data-route="sleep"] { color: var(--accent-sleep); }
   .nav-link.active[data-route="study"] { color: var(--accent-study); }
   .nav-link.active[data-route="friends"] { color: var(--accent-friends); }
+  .nav-link.active[data-route="habits"] { color: var(--accent-habits); }
+  .nav-link.active[data-route="history"] { color: var(--accent-history); }
   .nav-link.active[data-route="admin"] { color: var(--accent-admin); }
 
   /* Page background is now a solid per-section color (see --page-accent below), so
@@ -244,6 +248,8 @@
   section[data-view="friends"] { --accent: var(--accent-friends); }
   section[data-view="admin"] { --accent: var(--accent-admin); }
   section[data-view="study"] { --accent: var(--accent-study); }
+  section[data-view="habits"] { --accent: var(--accent-habits); }
+  section[data-view="history"] { --accent: var(--accent-history); }
 
   .accent-food { --accent: var(--accent-food); --on-accent: #2a2118; }
 
@@ -619,13 +625,167 @@
     align-items: end;
   }
 
+  .habit-add-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+
   @media (max-width: 720px) {
     .workout-form, .food-form { grid-template-columns: 1fr 1fr; }
     .workout-form .field-wide, .workout-form .btn-submit,
     .food-form .field-wide, .food-form .btn-submit { grid-column: 1 / -1; }
     .sleep-log-form { grid-template-columns: 1fr 1fr; }
     .sleep-log-form .btn-submit { grid-column: 1 / -1; }
+    .habit-add-form { grid-template-columns: 1fr; }
   }
+
+  /* ---- Habits ---- */
+  .habit-check {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 7px;
+    border: 2px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
+    flex-shrink: 0;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .habit-check.checked {
+    background: var(--accent-habits);
+    border-color: var(--accent-habits);
+  }
+
+  .habit-entry-item { gap: 14px; }
+
+  .habit-entry-item.done .entry-title { color: var(--ink-dim); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+
+  .habit-streak-chip {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-habits);
+    background: color-mix(in srgb, var(--accent-habits) 14%, var(--surface));
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  /* ---- Leaderboard & cheers ---- */
+  .leaderboard-rank {
+    font-weight: 900;
+    font-size: 15px;
+    color: var(--ink-dim);
+    width: 26px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .leaderboard-rank.top { color: color-mix(in srgb, var(--accent-friends) 65%, var(--ink)); }
+
+  .leaderboard-me { box-shadow: inset 0 0 0 2px var(--accent-friends); }
+
+  .cheer-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .cheer-btn:hover { border-color: var(--accent-friends); background: color-mix(in srgb, var(--accent-friends) 14%, var(--surface)); }
+
+  .cheers-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .cheer-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ground);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  /* ---- History heatmap ---- */
+  .heatmap-wrap {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, 1fr);
+    gap: 3px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .heatmap-cell {
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+    background: var(--ground);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .heatmap-cell[data-level="0"] { background: var(--ground); }
+  .heatmap-cell[data-level="1"] { background: color-mix(in srgb, var(--accent-history) 25%, var(--ground)); border-color: transparent; }
+  .heatmap-cell[data-level="2"] { background: color-mix(in srgb, var(--accent-history) 48%, var(--ground)); border-color: transparent; }
+  .heatmap-cell[data-level="3"] { background: color-mix(in srgb, var(--accent-history) 72%, var(--ground)); border-color: transparent; }
+  .heatmap-cell[data-level="4"] { background: var(--accent-history); border-color: transparent; }
+
+  .heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  .heatmap-legend .heatmap-cell { cursor: default; }
+
+  /* ---- Home quick-log row ---- */
+  .quick-log-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .quick-log-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .quick-log-btn:hover { transform: translateY(-1px); }
+  .quick-log-btn .quick-log-icon { font-size: 15px; }
 
   .entry-list {
     list-style: none;
@@ -1213,6 +1373,70 @@
 
   .modal-divider { height: 1px; background: var(--border); margin: 22px 0; }
 
+  .customize-tile-list {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .customize-tile-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--ground);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+
+  .customize-tile-item.hidden-tile { opacity: 0.5; }
+
+  .customize-tile-label { flex: 1; font-weight: 700; font-size: 14px; display:flex; align-items:center; gap:8px; }
+
+  .customize-tile-order-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-dim);
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .customize-tile-order-btn:disabled { opacity: 0.3; cursor: default; }
+
+  .customize-tile-toggle {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--border);
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+  }
+
+  .customize-tile-toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.15s ease;
+  }
+
+  .customize-tile-toggle.on { background: var(--good); }
+  .customize-tile-toggle.on::after { transform: translateX(16px); }
+
   /* ---- Bottom tab bar (mobile) ---- */
   .bottom-nav {
     display: none;
@@ -1260,6 +1484,8 @@
   .bottom-nav-link.active[data-route="sleep"] { color: var(--accent-sleep); }
   .bottom-nav-link.active[data-route="study"] { color: var(--accent-study); }
   .bottom-nav-link.active[data-route="friends"] { color: var(--accent-friends); }
+  .bottom-nav-link.active[data-route="habits"] { color: var(--accent-habits); }
+  .bottom-nav-link.active[data-route="history"] { color: var(--accent-history); }
   .bottom-nav-link.active[data-route="admin"] { color: var(--accent-admin); }
 
   @media (max-width: 720px) {
@@ -2123,6 +2349,8 @@
         <a href="#/sleep" class="nav-link" data-route="sleep">Sleep</a>
         <a href="#/study" class="nav-link" data-route="study">Study</a>
         <a href="#/friends" class="nav-link" data-route="friends">Friends<span class="nav-badge-dot" data-friend-badge hidden></span></a>
+        <a href="#/habits" class="nav-link" data-route="habits">Habits</a>
+        <a href="#/history" class="nav-link" data-route="history">History</a>
         <a href="#/admin" class="nav-link" data-route="admin" id="nav-admin-link" hidden>Admin</a>
       </nav>
       <div class="profile-menu" id="profile-menu">
@@ -2132,6 +2360,9 @@
         <div class="profile-menu-dropdown" id="profile-menu-dropdown" hidden>
           <button type="button" class="profile-menu-item" id="edit-profile-btn">
             <span>✏️</span><span>Edit profile</span>
+          </button>
+          <button type="button" class="profile-menu-item" id="customize-home-btn">
+            <span>🏠</span><span>Customize home</span>
           </button>
           <button type="button" class="profile-menu-item" id="theme-toggle-btn">
             <span id="theme-toggle-icon">🌙</span><span id="theme-toggle-label">Dark mode</span>
@@ -2152,6 +2383,8 @@
   <a href="#/sleep" class="bottom-nav-link" data-route="sleep"><span class="bottom-nav-icon">🌙</span><span class="bottom-nav-label">Sleep</span></a>
   <a href="#/study" class="bottom-nav-link" data-route="study"><span class="bottom-nav-icon">📚</span><span class="bottom-nav-label">Study</span></a>
   <a href="#/friends" class="bottom-nav-link" data-route="friends"><span class="bottom-nav-icon-wrap"><span class="bottom-nav-icon">👥</span><span class="nav-badge-dot" data-friend-badge hidden></span></span><span class="bottom-nav-label">Friends</span></a>
+  <a href="#/habits" class="bottom-nav-link" data-route="habits"><span class="bottom-nav-icon">✅</span><span class="bottom-nav-label">Habits</span></a>
+  <a href="#/history" class="bottom-nav-link" data-route="history"><span class="bottom-nav-icon">📅</span><span class="bottom-nav-label">History</span></a>
   <a href="#/admin" class="bottom-nav-link" data-route="admin" hidden><span class="bottom-nav-icon">🛠️</span><span class="bottom-nav-label">Admin</span></a>
 </nav>
 
@@ -2236,6 +2469,19 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="customize-home-overlay" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="customize-home-title">
+    <div class="modal-header">
+      <h2 class="modal-title" id="customize-home-title">Customize home</h2>
+      <button type="button" class="modal-close-btn" id="customize-home-close-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="plan-caption" style="margin-top:-6px;">Choose which tiles show on your Home page, and reorder them.</p>
+      <ul class="customize-tile-list" id="customize-tile-list"></ul>
+    </div>
+  </div>
+</div>
+
 <main class="container">
 
   <section data-view="home">
@@ -2262,7 +2508,10 @@
     <section class="panel" id="weekly-recap-card" hidden style="margin-bottom:24px;">
       <div class="panel-header">
         <span>📅 Your week in review</span>
-        <button type="button" class="modal-close-btn" id="weekly-recap-close-btn" aria-label="Dismiss">✕</button>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" class="modal-close-btn" id="weekly-recap-share-btn" aria-label="Share as image" title="Download as image">🖼️</button>
+          <button type="button" class="modal-close-btn" id="weekly-recap-close-btn" aria-label="Dismiss">✕</button>
+        </div>
       </div>
       <div class="panel-body">
         <div class="weekly-recap-stats" id="weekly-recap-stats"></div>
@@ -2270,7 +2519,7 @@
     </section>
 
     <div class="tile-grid">
-      <a href="#/fitness" class="tile card-fitness">
+      <a href="#/fitness" class="tile card-fitness" data-tile-key="fitness">
         <div class="tile-header">🏋️ Fitness</div>
         <div class="tile-body" id="home-fitness-body">
           <div class="stat-row">
@@ -2282,7 +2531,7 @@
           </div>
         </div>
       </a>
-      <a href="#/calories" class="tile accent-food">
+      <a href="#/calories" class="tile accent-food" data-tile-key="calories">
         <div class="tile-header">🍎 Calories</div>
         <div class="tile-body" id="home-calories-body">
           <div class="stat-row">
@@ -2294,7 +2543,7 @@
           </div>
         </div>
       </a>
-      <a href="#/sleep" class="tile card-sleep">
+      <a href="#/sleep" class="tile card-sleep" data-tile-key="sleep">
         <div class="tile-header">🌙 Sleep</div>
         <div class="tile-body" id="home-sleep-body">
           <div class="stat-row">
@@ -2306,7 +2555,7 @@
           </div>
         </div>
       </a>
-      <a href="#/study" class="tile card-study">
+      <a href="#/study" class="tile card-study" data-tile-key="study">
         <div class="tile-header">📚 Study</div>
         <div class="tile-body" id="home-study-body">
           <div class="stat-row">
@@ -2318,7 +2567,7 @@
           </div>
         </div>
       </a>
-      <a href="#/friends" class="tile card-friends">
+      <a href="#/friends" class="tile card-friends" data-tile-key="friends">
         <div class="tile-header">👥 Friends</div>
         <div class="tile-body" id="home-friends-body">
           <div class="stat-row">
@@ -2330,7 +2579,21 @@
           </div>
         </div>
       </a>
+      <a href="#/habits" class="tile" data-tile-key="habits" style="--accent: var(--accent-habits); --on-accent: #2a2118;">
+        <div class="tile-header">✅ Habits</div>
+        <div class="tile-body" id="home-habits-body">
+          <div class="stat-row">
+            <div class="stat-text">
+              <p class="tile-number display">Get started</p>
+              <p class="tile-sub">Add a habit →</p>
+            </div>
+            <div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64"><circle class="ring-track" cx="32" cy="32" r="26"></circle><circle class="ring-fill" id="home-habits-ring" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"></circle></svg><span class="ring-label" id="home-habits-ring-label">0%</span></div>
+          </div>
+        </div>
+      </a>
     </div>
+
+    <div class="quick-log-row" id="quick-log-row"></div>
 
     <section class="panel" id="badges-panel" style="margin-top:24px;">
       <div class="panel-header">Achievements</div>
@@ -2952,6 +3215,7 @@
       <div class="section-tabs split-toggle" id="friends-tabs">
         <button type="button" class="split-btn active" data-section-tab="connect">🔗 Connect</button>
         <button type="button" class="split-btn" data-section-tab="people">👥 My friends</button>
+        <button type="button" class="split-btn" data-section-tab="leaderboard">🏆 Leaderboard</button>
       </div>
 
       <div class="section-tab-panel" data-section-panel="connect">
@@ -3004,7 +3268,91 @@
           </div>
         </section>
       </div>
+
+      <div class="section-tab-panel" data-section-panel="leaderboard" hidden>
+        <section class="panel">
+          <div class="panel-header">🏆 Streak leaderboard</div>
+          <div class="panel-body">
+            <ul class="entry-list" id="leaderboard-list"></ul>
+            <div class="empty-state" id="leaderboard-empty" hidden>
+              <span class="empty-state-icon">🏆</span>
+              <p class="empty-state-title">Add a friend to see the leaderboard</p>
+              <p class="empty-state-sub">Ranked by current day streak.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">Cheers you've received</div>
+          <div class="panel-body">
+            <div class="cheers-row" id="cheers-received-row"></div>
+            <p class="plan-caption" id="cheers-received-empty">No cheers yet — nudge a friend from the leaderboard above and they might nudge back.</p>
+          </div>
+        </section>
+      </div>
     </div>
+  </section>
+
+  <section data-view="habits" hidden>
+    <h1 class="page-title display">Habits ✅</h1>
+    <p class="page-subtitle">Daily habits you define yourself — check them off as you go.</p>
+
+    <section class="panel">
+      <div class="panel-header">Add a habit</div>
+      <div class="panel-body">
+        <form id="habit-add-form" class="habit-add-form">
+          <div class="field field-wide">
+            <label for="habit-name-input">Habit</label>
+            <input type="text" id="habit-name-input" placeholder="e.g. Read for 20 minutes" maxlength="80" required>
+          </div>
+          <button type="submit" class="btn-submit">Add</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:16px;">
+      <div class="panel-header">
+        <span>Today</span>
+        <span class="plan-caption" id="habits-today-progress" style="margin:0;">0 / 0 done</span>
+      </div>
+      <div class="panel-body">
+        <ul class="entry-list" id="habits-list"></ul>
+        <div class="empty-state" id="habits-empty" hidden>
+          <span class="empty-state-icon">✅</span>
+          <p class="empty-state-title">No habits yet</p>
+          <p class="empty-state-sub">Add your first one above.</p>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <section data-view="history" hidden>
+    <h1 class="page-title display">History 📅</h1>
+    <p class="page-subtitle">A look back at every day you showed up.</p>
+
+    <section class="panel">
+      <div class="panel-header">
+        <span id="history-trend-title">Last 84 days</span>
+        <div class="trend-range-toggle" data-trend-toggle="history">
+          <button type="button" class="trend-range-btn active" data-range="84">12W</button>
+          <button type="button" class="trend-range-btn" data-range="182">26W</button>
+          <button type="button" class="trend-range-btn" data-range="364">52W</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="heatmap-wrap" id="history-heatmap"></div>
+        <div class="heatmap-legend">
+          <span>Less</span>
+          <span class="heatmap-cell" data-level="0"></span>
+          <span class="heatmap-cell" data-level="1"></span>
+          <span class="heatmap-cell" data-level="2"></span>
+          <span class="heatmap-cell" data-level="3"></span>
+          <span class="heatmap-cell" data-level="4"></span>
+          <span>More</span>
+        </div>
+        <p class="plan-caption" id="history-day-detail">Tap a day to see what you logged.</p>
+      </div>
+    </section>
   </section>
 
   <section data-view="admin" hidden>
@@ -3387,7 +3735,7 @@
   }
 
   // Range state for each trend chart's day toggle (7/30/90), remembered per section for the session.
-  const trendRangeDays = { fitness: 7, calories: 7, sleep: 7, study: 7 };
+  const trendRangeDays = { fitness: 7, calories: 7, sleep: 7, study: 7, history: 84 };
   // Caches the last target value passed in, so the range toggle can re-render without re-fetching it.
   const _trendTargetCache = { calories: 0, sleep: 0 };
 
@@ -3417,6 +3765,7 @@
           else if (section === "calories") renderCaloriesTrend(_trendTargetCache.calories);
           else if (section === "sleep") renderSleepTrend(_trendTargetCache.sleep);
           else if (section === "study") renderStudyTrend();
+          else if (section === "history") renderHistoryHeatmap();
         });
       });
     });
@@ -4587,6 +4936,9 @@
 
       const { data: sessionDates } = await sb.from("study_sessions").select("started_at").eq("user_id", currentUser.id);
       (sessionDates || []).forEach((s) => dates.add(s.started_at.slice(0, 10)));
+
+      const { data: habitDates } = await sb.from("habit_logs").select("log_date").eq("user_id", currentUser.id);
+      (habitDates || []).forEach((h) => dates.add(h.log_date));
     }
 
     let streak = 0;
@@ -4646,6 +4998,7 @@
     refreshHomeSleepTile();
     refreshHomeStudyTile();
     refreshHomeFriendsTile();
+    await refreshHomeHabitsTile();
     renderFitnessSection();
     await renderCaloriesSection();
     renderHomeStreak();
@@ -4655,6 +5008,8 @@
     refreshHomePriorityCard();
     refreshFriendRequestBadge();
     refreshWeeklyRecap();
+    renderQuickLogRow();
+    applyHomeTileConfig();
   }
 
   // ---- Home priority card (what most needs attention today) ----
@@ -4791,6 +5146,107 @@
       weeklyRecapStatHtml("📚", studySessionsCount, "study sessions"),
     ].join("");
     card.hidden = false;
+  }
+
+  // ---- Weekly recap image export ----
+  function roundRectPath(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawWeeklyRecapImage(stats) {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const width = 720;
+    const rowH = 84;
+    const headerH = 140;
+    const footerH = 56;
+    const height = headerH + stats.length * rowH + footerH;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+
+    const dark = isDarkActive();
+    const bg = dark ? "#1b1815" : "#fbf7ef";
+    const surface = dark ? "#242019" : "#fff8ec";
+    const ink = dark ? "#f2ece0" : "#332c22";
+    const inkDim = dark ? "#b6ac99" : "#7d735f";
+    const accent = "#f5a83c";
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = accent;
+    ctx.font = "900 30px Manrope, sans-serif";
+    ctx.fillText("Own Day", 32, 56);
+
+    ctx.fillStyle = ink;
+    ctx.font = "800 22px Manrope, sans-serif";
+    ctx.fillText("Your week in review", 32, 92);
+
+    ctx.fillStyle = inkDim;
+    ctx.font = "600 14px Manrope, sans-serif";
+    ctx.fillText(new Date().toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }), 32, 116);
+
+    let y = headerH;
+    stats.forEach((s) => {
+      ctx.fillStyle = surface;
+      roundRectPath(ctx, 24, y, width - 48, rowH - 14, 16);
+      ctx.fill();
+
+      ctx.textAlign = "left";
+      ctx.font = "34px sans-serif";
+      ctx.fillText(s.icon, 44, y + (rowH - 14) / 2 + 12);
+
+      ctx.fillStyle = ink;
+      ctx.font = "900 26px Manrope, sans-serif";
+      ctx.fillText(s.value, 96, y + (rowH - 14) / 2 + 10);
+
+      ctx.fillStyle = inkDim;
+      ctx.font = "700 13px Manrope, sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(s.label.toUpperCase(), width - 44, y + (rowH - 14) / 2 + 5);
+
+      y += rowH;
+    });
+
+    ctx.fillStyle = inkDim;
+    ctx.textAlign = "left";
+    ctx.font = "600 12px Manrope, sans-serif";
+    ctx.fillText("ownday app", 32, height - 22);
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `own-day-recap-${todayISO()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    });
+  }
+
+  function initWeeklyRecapShare() {
+    const btn = document.getElementById("weekly-recap-share-btn");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      const stats = Array.from(document.querySelectorAll("#weekly-recap-stats .weekly-recap-stat")).map((el) => ({
+        icon: el.querySelector(".weekly-recap-stat-icon")?.textContent || "",
+        value: el.querySelector(".weekly-recap-stat-value")?.textContent || "",
+        label: el.querySelector(".weekly-recap-stat-label")?.textContent || "",
+      }));
+      if (stats.length === 0) return;
+      drawWeeklyRecapImage(stats);
+    });
   }
 
   // ---- Friends ----
@@ -5002,6 +5458,81 @@
     renderIncomingRequests(incoming, profilesById);
     renderFriendsList(accepted, profilesById, summaryById);
     updateFriendBadge(incoming.length);
+    await renderLeaderboard(accepted, profilesById, summaryById);
+    await loadCheersReceived();
+  }
+
+  // ---- Leaderboard & cheers ----
+  async function renderLeaderboard(accepted, profilesById, summaryById) {
+    const listEl = document.getElementById("leaderboard-list");
+    const emptyEl = document.getElementById("leaderboard-empty");
+    if (!listEl) return;
+    if (accepted.length === 0) {
+      listEl.innerHTML = "";
+      emptyEl.hidden = false;
+      return;
+    }
+    emptyEl.hidden = true;
+
+    const myStreak = await computeStreak();
+    const rows = accepted.map((r) => {
+      const friendId = r.requester_id === currentUser.id ? r.recipient_id : r.requester_id;
+      return { id: friendId, name: profilesById[friendId]?.name || "Friend", streak: (summaryById[friendId] || {}).streak || 0, isMe: false };
+    });
+    rows.push({ id: currentUser.id, name: currentUser.name || "You", streak: myStreak, isMe: true });
+    rows.sort((a, b) => b.streak - a.streak);
+
+    listEl.innerHTML = rows
+      .map((row, i) => {
+        const rank = i + 1;
+        const initial = row.name.charAt(0).toUpperCase();
+        return `
+          <li class="entry-item habit-entry-item${row.isMe ? " leaderboard-me" : ""}">
+            <span class="leaderboard-rank${rank <= 3 ? " top" : ""}">${rank}</span>
+            <span class="avatar-circle avatar-circle-sm accent-friends">${escapeHtml(initial)}</span>
+            <div class="entry-info" style="flex:1;">
+              <span class="entry-title">${escapeHtml(row.name)}${row.isMe ? " (you)" : ""}</span>
+              <span class="entry-meta">🔥 ${row.streak}-day streak</span>
+            </div>
+            ${row.isMe ? "" : `<button type="button" class="cheer-btn" data-cheer="${row.id}">👏 Cheer</button>`}
+          </li>
+        `;
+      })
+      .join("");
+
+    listEl.querySelectorAll("[data-cheer]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        btn.textContent = "Sent! 🎉";
+        await sb.from("friend_reactions").insert({ from_user_id: currentUser.id, to_user_id: btn.dataset.cheer, emoji: "👏" });
+      });
+    });
+  }
+
+  async function loadCheersReceived() {
+    const rowEl = document.getElementById("cheers-received-row");
+    const emptyEl = document.getElementById("cheers-received-empty");
+    if (!rowEl) return;
+    const { data } = await sb
+      .from("friend_reactions")
+      .select("from_user_id, emoji, created_at")
+      .eq("to_user_id", currentUser.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    const cheers = data || [];
+    if (cheers.length === 0) {
+      rowEl.innerHTML = "";
+      emptyEl.hidden = false;
+      return;
+    }
+    emptyEl.hidden = true;
+    const fromIds = Array.from(new Set(cheers.map((c) => c.from_user_id)));
+    let namesById = {};
+    if (fromIds.length > 0) {
+      const { data: profs } = await sb.from("profiles").select("id, name").in("id", fromIds);
+      (profs || []).forEach((p) => { namesById[p.id] = p.name; });
+    }
+    rowEl.innerHTML = cheers.map((c) => `<span class="cheer-chip">${c.emoji} ${escapeHtml(namesById[c.from_user_id] || "A friend")}</span>`).join("");
   }
 
   function renderIncomingRequests(incoming, profilesById) {
@@ -5103,6 +5634,274 @@
     dashboard.hidden = false;
     renderMyQrCode();
     await loadFriendData();
+  }
+
+  // ---- Habits ----
+  let habitsCache = { habits: [], logsByHabit: {} };
+
+  async function loadHabitsData() {
+    if (!currentUser) return;
+    const [{ data: habits }, { data: logs }] = await Promise.all([
+      sb.from("habits").select("id, name").eq("user_id", currentUser.id).eq("archived", false).order("created_at", { ascending: true }),
+      sb.from("habit_logs").select("habit_id, log_date").eq("user_id", currentUser.id),
+    ]);
+    const logsByHabit = {};
+    (logs || []).forEach((l) => {
+      if (!logsByHabit[l.habit_id]) logsByHabit[l.habit_id] = new Set();
+      logsByHabit[l.habit_id].add(l.log_date);
+    });
+    habitsCache = { habits: habits || [], logsByHabit };
+  }
+
+  function computeHabitStreakFromDates(dateSet) {
+    let streak = 0;
+    const cursor = new Date();
+    if (!dateSet.has(todayISO())) cursor.setDate(cursor.getDate() - 1);
+    while (dateSet.has(toISO(cursor))) {
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return streak;
+  }
+
+  function renderHomeHabitsTileFromCache() {
+    const body = document.getElementById("home-habits-body");
+    if (!body) return;
+    const habits = habitsCache.habits || [];
+    if (habits.length === 0) {
+      body.innerHTML = `
+        <div class="stat-row">
+          <div class="stat-text">
+            <p class="tile-number display">Get started</p>
+            <p class="tile-sub">Add a habit →</p>
+          </div>
+          ${ringSVG("home-habits-ring")}
+        </div>
+      `;
+      setRingProgress("home-habits-ring", 0);
+      return;
+    }
+    const today = todayISO();
+    const doneCount = habits.filter((h) => (habitsCache.logsByHabit[h.id] || new Set()).has(today)).length;
+    const pct = Math.round((doneCount / habits.length) * 100);
+    body.innerHTML = `
+      <div class="stat-row">
+        <div class="stat-text">
+          <p class="tile-number display">${doneCount} / ${habits.length}</p>
+          <p class="tile-sub">done today</p>
+        </div>
+        ${ringSVG("home-habits-ring")}
+      </div>
+    `;
+    setRingProgress("home-habits-ring", pct);
+  }
+
+  async function refreshHomeHabitsTile() {
+    if (!currentUser) return;
+    await loadHabitsData();
+    renderHomeHabitsTileFromCache();
+  }
+
+  async function toggleHabitToday(habitId) {
+    const today = todayISO();
+    const dates = habitsCache.logsByHabit[habitId] || new Set();
+    if (dates.has(today)) {
+      await sb.from("habit_logs").delete().eq("habit_id", habitId).eq("log_date", today).eq("user_id", currentUser.id);
+    } else {
+      await sb.from("habit_logs").insert({ habit_id: habitId, user_id: currentUser.id, log_date: today });
+    }
+    await renderHabitsSection();
+  }
+
+  async function renderHabitsSection() {
+    const listEl = document.getElementById("habits-list");
+    const emptyEl = document.getElementById("habits-empty");
+    const progressEl = document.getElementById("habits-today-progress");
+    if (!listEl || !currentUser) return;
+    listEl.innerHTML = skeletonListItems(2);
+
+    await loadHabitsData();
+    const habits = habitsCache.habits;
+
+    if (habits.length === 0) {
+      listEl.innerHTML = "";
+      emptyEl.hidden = false;
+      progressEl.textContent = "0 / 0 done";
+      renderHomeHabitsTileFromCache();
+      return;
+    }
+    emptyEl.hidden = true;
+
+    const today = todayISO();
+    let doneCount = 0;
+    listEl.innerHTML = habits
+      .map((h) => {
+        const dates = habitsCache.logsByHabit[h.id] || new Set();
+        const done = dates.has(today);
+        if (done) doneCount++;
+        const streak = computeHabitStreakFromDates(dates);
+        return `
+          <li class="entry-item habit-entry-item${done ? " done" : ""}">
+            <button type="button" class="habit-check${done ? " checked" : ""}" data-habit-check="${h.id}" aria-label="${done ? "Mark not done today" : "Mark done today"}">${done ? "✓" : ""}</button>
+            <div class="entry-info" style="flex:1;">
+              <span class="entry-title">${escapeHtml(h.name)}</span>
+            </div>
+            ${streak > 0 ? `<span class="habit-streak-chip">🔥 ${streak}</span>` : ""}
+            <button type="button" class="delete-btn" data-habit-delete="${h.id}" title="Delete habit">✕</button>
+          </li>
+        `;
+      })
+      .join("");
+    progressEl.textContent = `${doneCount} / ${habits.length} done`;
+
+    listEl.querySelectorAll("[data-habit-check]").forEach((btn) => {
+      btn.addEventListener("click", () => toggleHabitToday(btn.dataset.habitCheck));
+    });
+    listEl.querySelectorAll("[data-habit-delete]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Delete this habit? This also removes its history.")) return;
+        await sb.from("habits").delete().eq("id", btn.dataset.habitDelete);
+        await renderHabitsSection();
+      });
+    });
+
+    renderHomeHabitsTileFromCache();
+  }
+
+  function initHabits() {
+    const form = document.getElementById("habit-add-form");
+    if (!form) return;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("habit-name-input");
+      const name = input.value.trim();
+      if (!name || !currentUser) return;
+      await sb.from("habits").insert({ user_id: currentUser.id, name });
+      input.value = "";
+      await renderHabitsSection();
+    });
+  }
+
+  // ---- Home quick-log shortcuts ----
+  const QUICK_LOG_SHORTCUTS = [
+    { route: "fitness", icon: "🏋️", label: "Log workout", focus: "exercise", tab: null },
+    { route: "calories", icon: "🍎", label: "Log a meal", focus: "food-name", tab: null },
+    { route: "sleep", icon: "🌙", label: "Log sleep", focus: "sleep-log-hours", tab: "log" },
+    { route: "study", icon: "📚", label: "Start studying", focus: "study-timer-subject", tab: "overview" },
+  ];
+
+  function goToAndFocus(route, focusId, tabName) {
+    location.hash = `#/${route}`;
+    setTimeout(() => {
+      if (tabName) {
+        const tabBtn = document.querySelector(`section[data-view="${route}"] [data-section-tab="${tabName}"]`);
+        if (tabBtn) tabBtn.click();
+      }
+      setTimeout(() => {
+        const input = document.getElementById(focusId);
+        if (input) input.focus();
+      }, 80);
+    }, 160);
+  }
+
+  function renderQuickLogRow() {
+    const row = document.getElementById("quick-log-row");
+    if (!row || !currentUser) return;
+
+    const today = todayISO();
+    const undoneHabits = (habitsCache.habits || []).filter((h) => !(habitsCache.logsByHabit[h.id] || new Set()).has(today));
+
+    let html = "";
+    undoneHabits.slice(0, 3).forEach((h) => {
+      html += `<button type="button" class="quick-log-btn" data-quick-habit="${h.id}"><span class="quick-log-icon">✅</span>${escapeHtml(h.name)}</button>`;
+    });
+    QUICK_LOG_SHORTCUTS.forEach((s) => {
+      html += `<button type="button" class="quick-log-btn" data-quick-route="${s.route}" data-quick-focus="${s.focus}" data-quick-tab="${s.tab || ""}"><span class="quick-log-icon">${s.icon}</span>${s.label}</button>`;
+    });
+    row.innerHTML = html;
+
+    row.querySelectorAll("[data-quick-habit]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        await toggleHabitToday(btn.dataset.quickHabit);
+        renderQuickLogRow();
+      });
+    });
+    row.querySelectorAll("[data-quick-route]").forEach((btn) => {
+      btn.addEventListener("click", () => goToAndFocus(btn.dataset.quickRoute, btn.dataset.quickFocus, btn.dataset.quickTab));
+    });
+  }
+
+  // ---- History (activity heatmap) ----
+  async function computeActivityByDate(daysBack) {
+    const byDate = {};
+    const touch = (date, cat) => {
+      if (!date) return;
+      if (!byDate[date]) byDate[date] = new Set();
+      byDate[date].add(cat);
+    };
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - daysBack);
+    const cutoffISO = toISO(cutoff);
+
+    getFood().forEach((f) => { if (f.date >= cutoffISO) touch(f.date, "calories"); });
+    getWorkouts().forEach((w) => { if (w.date >= cutoffISO) touch(w.date, "fitness"); });
+
+    if (currentUser) {
+      const [{ data: sleepDates }, { data: noteDates }, { data: quizDates }, { data: sessionDates }, { data: habitDates }] = await Promise.all([
+        sb.from("sleep_logs").select("date").eq("user_id", currentUser.id).gte("date", cutoffISO),
+        sb.from("study_notes").select("created_at").eq("user_id", currentUser.id),
+        sb.from("study_quizzes").select("completed_at").eq("user_id", currentUser.id).not("completed_at", "is", null),
+        sb.from("study_sessions").select("started_at").eq("user_id", currentUser.id),
+        sb.from("habit_logs").select("log_date").eq("user_id", currentUser.id).gte("log_date", cutoffISO),
+      ]);
+      (sleepDates || []).forEach((s) => touch(s.date, "sleep"));
+      (noteDates || []).forEach((n) => { const d = n.created_at.slice(0, 10); if (d >= cutoffISO) touch(d, "study"); });
+      (quizDates || []).forEach((q) => { const d = q.completed_at.slice(0, 10); if (d >= cutoffISO) touch(d, "study"); });
+      (sessionDates || []).forEach((s) => { const d = s.started_at.slice(0, 10); if (d >= cutoffISO) touch(d, "study"); });
+      (habitDates || []).forEach((h) => touch(h.log_date, "habits"));
+    }
+
+    return byDate;
+  }
+
+  const CATEGORY_LABELS = { fitness: "🏋️ Fitness", calories: "🍎 Calories", sleep: "🌙 Sleep", study: "📚 Study", habits: "✅ Habits" };
+
+  async function renderHistoryHeatmap() {
+    const wrap = document.getElementById("history-heatmap");
+    const detailEl = document.getElementById("history-day-detail");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+
+    const daysBack = trendRangeDays.history || 84;
+    const byDate = await computeActivityByDate(daysBack);
+
+    // Align the grid to start on a Sunday so rows line up like a real calendar.
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - (daysBack - 1));
+    start.setDate(start.getDate() - start.getDay());
+
+    const cells = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const iso = toISO(d);
+      const cats = byDate[iso] ? Array.from(byDate[iso]) : [];
+      const level = cats.length === 0 ? 0 : Math.min(4, cats.length + 1);
+      cells.push({ date: iso, level, cats });
+    }
+
+    wrap.innerHTML = cells
+      .map((c) => `<button type="button" class="heatmap-cell" data-level="${c.date > todayISO() ? "" : c.level}" data-date="${c.date}" ${c.date > todayISO() ? "style=\"visibility:hidden;\"" : ""}></button>`)
+      .join("");
+
+    wrap.querySelectorAll("[data-date]").forEach((cell) => {
+      cell.addEventListener("click", () => {
+        const info = cells.find((c) => c.date === cell.dataset.date);
+        if (!info || !detailEl) return;
+        const label = parseLocalDate(info.date).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+        detailEl.textContent = info.cats.length === 0 ? `${label}: nothing logged.` : `${label}: ${info.cats.map((c) => CATEGORY_LABELS[c] || c).join(", ")}.`;
+      });
+    });
   }
 
   // ---- Study (Gemini-backed) ----
@@ -5498,6 +6297,110 @@
         localStorage.setItem("ownday:theme", next);
       } catch (e) {}
       applyTheme(next);
+    });
+  }
+
+  // ---- Customize home (reorder / hide tiles, saved per-device) ----
+  const HOME_TILE_DEFAULTS = [
+    { key: "fitness", label: "🏋️ Fitness" },
+    { key: "calories", label: "🍎 Calories" },
+    { key: "sleep", label: "🌙 Sleep" },
+    { key: "study", label: "📚 Study" },
+    { key: "friends", label: "👥 Friends" },
+    { key: "habits", label: "✅ Habits" },
+  ];
+
+  function getHomeTileConfig() {
+    const fallback = () => HOME_TILE_DEFAULTS.map((t) => ({ key: t.key, visible: true }));
+    if (!currentUser) return fallback();
+    try {
+      const raw = localStorage.getItem(storageKey("homeTileConfig"));
+      if (!raw) return fallback();
+      const saved = JSON.parse(raw).filter((s) => HOME_TILE_DEFAULTS.some((t) => t.key === s.key));
+      const savedKeys = new Set(saved.map((s) => s.key));
+      HOME_TILE_DEFAULTS.forEach((t) => { if (!savedKeys.has(t.key)) saved.push({ key: t.key, visible: true }); });
+      return saved;
+    } catch (e) {
+      return fallback();
+    }
+  }
+
+  function saveHomeTileConfig(config) {
+    if (!currentUser) return;
+    try { localStorage.setItem(storageKey("homeTileConfig"), JSON.stringify(config)); } catch (e) {}
+  }
+
+  function applyHomeTileConfig() {
+    const grid = document.querySelector('section[data-view="home"] .tile-grid');
+    if (!grid) return;
+    getHomeTileConfig().forEach((entry) => {
+      const tile = grid.querySelector(`[data-tile-key="${entry.key}"]`);
+      if (!tile) return;
+      tile.hidden = !entry.visible;
+      grid.appendChild(tile);
+    });
+  }
+
+  function renderCustomizeHomeList() {
+    const listEl = document.getElementById("customize-tile-list");
+    if (!listEl) return;
+    const config = getHomeTileConfig();
+    const labelByKey = {};
+    HOME_TILE_DEFAULTS.forEach((t) => { labelByKey[t.key] = t.label; });
+
+    listEl.innerHTML = config
+      .map(
+        (entry, i) => `
+      <li class="customize-tile-item${entry.visible ? "" : " hidden-tile"}">
+        <button type="button" class="customize-tile-order-btn" data-move="up" data-key="${entry.key}" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
+        <button type="button" class="customize-tile-order-btn" data-move="down" data-key="${entry.key}" ${i === config.length - 1 ? "disabled" : ""} aria-label="Move down">↓</button>
+        <span class="customize-tile-label">${labelByKey[entry.key] || entry.key}</span>
+        <button type="button" class="customize-tile-toggle${entry.visible ? " on" : ""}" data-toggle="${entry.key}" aria-label="${entry.visible ? "Hide tile" : "Show tile"}"></button>
+      </li>
+    `
+      )
+      .join("");
+
+    listEl.querySelectorAll("[data-toggle]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const cfg = getHomeTileConfig();
+        const entry = cfg.find((c) => c.key === btn.dataset.toggle);
+        if (entry) entry.visible = !entry.visible;
+        saveHomeTileConfig(cfg);
+        renderCustomizeHomeList();
+        applyHomeTileConfig();
+      });
+    });
+
+    listEl.querySelectorAll("[data-move]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const cfg = getHomeTileConfig();
+        const idx = cfg.findIndex((c) => c.key === btn.dataset.key);
+        const swapIdx = idx + (btn.dataset.move === "up" ? -1 : 1);
+        if (idx < 0 || swapIdx < 0 || swapIdx >= cfg.length) return;
+        [cfg[idx], cfg[swapIdx]] = [cfg[swapIdx], cfg[idx]];
+        saveHomeTileConfig(cfg);
+        renderCustomizeHomeList();
+        applyHomeTileConfig();
+      });
+    });
+  }
+
+  function initCustomizeHome() {
+    const btn = document.getElementById("customize-home-btn");
+    const overlay = document.getElementById("customize-home-overlay");
+    const closeBtn = document.getElementById("customize-home-close-btn");
+    if (!btn || !overlay) return;
+    btn.addEventListener("click", () => {
+      document.getElementById("profile-menu-dropdown").hidden = true;
+      document.getElementById("profile-menu-btn").setAttribute("aria-expanded", "false");
+      renderCustomizeHomeList();
+      overlay.hidden = false;
+    });
+    closeBtn.addEventListener("click", () => { overlay.hidden = true; });
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.hidden = true; });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !overlay.hidden) overlay.hidden = true;
     });
   }
 
@@ -5903,7 +6806,7 @@
   }
 
   // ---- Routing ----
-  const ROUTES = ["home", "fitness", "calories", "sleep", "study", "friends", "admin"];
+  const ROUTES = ["home", "fitness", "calories", "sleep", "study", "friends", "habits", "history", "admin"];
   let pendingAddFriendId = null;
   let previousRoute = null;
 
@@ -5916,6 +6819,8 @@
     sleep: "var(--ground)",
     study: "var(--ground)",
     friends: "var(--ground)",
+    habits: "var(--ground)",
+    history: "var(--ground)",
     admin: "var(--ground)",
   };
 
@@ -5967,6 +6872,8 @@
       if (route === "friends") renderFriendsSection();
       if (route === "sleep") renderSleepSection();
       if (route === "study") renderStudySection();
+      if (route === "habits") renderHabitsSection();
+      if (route === "history") renderHistoryHeatmap();
     };
 
     if (current && current.dataset.view !== route && !prefersReducedMotion()) {
@@ -6420,7 +7327,10 @@
     initPresentBanScreen();
     initTrendRangeToggles();
     initWeeklyRecap();
+    initWeeklyRecapShare();
     initThemeToggle();
+    initHabits();
+    initCustomizeHome();
     setSplit("gym");
     initSupabaseAuth();
   });
