@@ -26,7 +26,7 @@
     --page-accent: var(--ground);
     --accent: var(--accent-home);
     --accent-home: #f5a83c;
-    --accent-workout: #a39d90;
+    --accent-workout: #7c5cff;
     --accent-food: #e0793a;
     --accent-sleep: #7db3ec;
     --accent-friends: #f2d038;
@@ -300,13 +300,19 @@
   }
 
   /* ---- Scoreboard tile ---- */
+  /* Flexbox (not grid) on purpose: with a fixed minmax() grid, a row left
+     with just one leftover tile (e.g. 5 tiles across 4 columns) stays
+     stranded at 1-column width with empty space beside it. Flex-wrap
+     distributes each ROW's leftover space among only that row's items, so
+     a lone last tile stretches to fill the full row at every breakpoint. */
   .tile-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 16px;
   }
 
   .tile {
+    flex: 1 1 190px;
     background: var(--surface);
     border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
     border-radius: 24px;
@@ -371,6 +377,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 14px;
+    max-width: 420px;
   }
 
   .stat-text { min-width: 0; flex: 1; }
@@ -1425,6 +1432,13 @@
   }
 
   /* ---- Friends ---- */
+  .section-tab-panel[data-section-panel="connect"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+
   .qr-frame {
     display: inline-block;
     padding: 16px;
